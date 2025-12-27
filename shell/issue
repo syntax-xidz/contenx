@@ -1,0 +1,20 @@
+#!/bin/sh /etc/rc.common
+
+START=40
+
+boot() {
+    # issue
+    if [ -f /var/run/dbus.pid ]; then
+        rm -f /var/run/dbus.pid 2>/dev/null
+    fi
+    
+    return 0
+}
+
+start() {
+    boot
+}
+
+stop() {
+    :
+}

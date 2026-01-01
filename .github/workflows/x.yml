@@ -1,0 +1,347 @@
+name: Universal Format Obfuscator
+
+on:
+  workflow_dispatch:
+    inputs:
+      script_url:
+        description: 'URL'
+        required: true
+        type: string
+      
+      file_type:
+        description: 'File type'
+        required: false
+        type: choice
+        default: 'auto'
+        options:
+          - 'auto'
+          - 'shell'
+          - 'javascript'
+          - 'html'
+          - 'yaml'
+      
+      size_ratio:
+        description: 'Size ratio'
+        required: false
+        type: choice
+        default: '1.5x'
+        options:
+          - '1.2x'
+          - '1.5x'
+          - '2x'
+          - '3x'
+      
+      target_env:
+        description: 'Target environment'
+        required: false
+        type: choice
+        default: 'openwrt'
+        options:
+          - 'openwrt'
+          - 'standard'
+
+jobs:
+  obfuscate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download
+      run: |
+        curl -L -o raw_file "${{ github.event.inputs.script_url }}"
+        if [ ! -f raw_file ] || [ ! -s raw_file ]; then
+            exit 1
+        fi
+        cp raw_file original
+
+    - name: Detect
+      id: detect
+      run: |
+        if [ "${{ github.event.inputs.file_type }}" != "auto" ]; then
+            file_type="${{ github.event.inputs.file_type }}"
+        else
+            first_line=$(head -1 original 2>/dev/null || echo "")
+            filename=$(basename "${{ github.event.inputs.script_url }}")
+            
+            if echo "$filename" | grep -E "\.(yml|yaml)$" >/dev/null; then
+                file_type="yaml"
+            elif echo "$first_line" | grep -E "^#!/bin/(bash|sh)" >/dev/null; then
+                file_type="shell"
+            elif echo "$first_line" | grep -E "^#!/usr/bin/env (bash|sh)" >/dev/null; then
+                file_type="shell"
+            elif echo "$first_line" | grep -E "^#!/usr/bin/env node" >/dev/null; then
+                file_type="javascript"
+            elif grep -q "<!DOCTYPE\|<html\|<HTML" original 2>/dev/null; then
+                file_type="html"
+            else
+                file_type="shell"
+            fi
+        fi
+        
+        echo "type=$file_type" >> $GITHUB_OUTPUT
+
+    - name: Obfuscate Shell OpenWrt
+      if: steps.detect.outputs.type == 'shell' && github.event.inputs.target_env == 'openwrt'
+      run: |
+        orig_size=$(wc -c < original)
+        ratio="${{ github.event.inputs.size_ratio }}"
+        case "$ratio" in
+          "1.2x") target=$((orig_size * 12 / 10)) ;;
+          "1.5x") target=$((orig_size * 15 / 10)) ;;
+          "2x") target=$((orig_size * 2)) ;;
+          "3x") target=$((orig_size * 3)) ;;
+          *) target=$((orig_size * 15 / 10)) ;;
+        esac
+        
+        echo '#!/bin/sh' > obfuscated
+        
+        dummy_vars=$((target / 30))
+        if [ $dummy_vars -gt 500 ]; then
+            dummy_vars=500
+        fi
+        if [ $dummy_vars -lt 50 ]; then
+            dummy_vars=50
+        fi
+        
+        i=1
+        while [ $i -le $dummy_vars ]; do
+            var_name="v$(printf '%04d' $i)"
+            var_value=$(dd if=/dev/urandom bs=6 count=1 2>/dev/null | base64 | tr -d '+/=' | head -c 6)
+            echo "${var_name}='${var_value}'" >> obfuscated
+            i=$((i + 1))
+        done
+        
+        echo "" >> obfuscated
+        echo '_decode() { echo "$1" | base64 -d; }' >> obfuscated
+        echo "" >> obfuscated
+        
+        line_num=1
+        while IFS= read -r line || [ -n "$line" ]; do
+            if [ -n "$line" ]; then
+                case "$line" in
+                    \#!*) continue ;;
+                    \#*) continue ;;
+                    *)
+                        enc=$(echo "$line" | base64)
+                        cmd_var="c$(printf '%04d' $line_num)"
+                        echo "${cmd_var}='${enc}'" >> obfuscated
+                        echo "eval \"\$(_decode \"\$${cmd_var}\")\"" >> obfuscated
+                        line_num=$((line_num + 1))
+                        ;;
+                esac
+            fi
+        done < original
+        
+        chmod +x obfuscated
+
+    - name: Obfuscate Shell Standard
+      if: steps.detect.outputs.type == 'shell' && github.event.inputs.target_env == 'standard'
+      run: |
+        orig_size=$(wc -c < original)
+        ratio="${{ github.event.inputs.size_ratio }}"
+        case "$ratio" in
+          "1.2x") target=$((orig_size * 12 / 10)) ;;
+          "1.5x") target=$((orig_size * 15 / 10)) ;;
+          "2x") target=$((orig_size * 2)) ;;
+          "3x") target=$((orig_size * 3)) ;;
+          *) target=$((orig_size * 15 / 10)) ;;
+        esac
+        
+        echo '#!/bin/bash' > obfuscated
+        
+        dummy_vars=$((target / 20))
+        if [ $dummy_vars -gt 1000 ]; then
+            dummy_vars=1000
+        fi
+        if [ $dummy_vars -lt 100 ]; then
+            dummy_vars=100
+        fi
+        
+        vars_per_line=25
+        long_line=""
+        counter=0
+        
+        i=1
+        while [ $i -le $dummy_vars ]; do
+            vn="v$(printf '%04d' $i)"
+            vv=$(openssl rand -hex 3)
+            
+            if [ $counter -eq 0 ]; then
+                long_line="${vn}=\"${vv}\""
+            else
+                long_line="${long_line};${vn}=\"${vv}\""
+            fi
+            
+            counter=$((counter + 1))
+            
+            if [ $counter -ge $vars_per_line ]; then
+                echo "$long_line" >> obfuscated
+                long_line=""
+                counter=0
+            fi
+            
+            i=$((i + 1))
+        done
+        
+        if [ -n "$long_line" ]; then
+            echo "$long_line" >> obfuscated
+        fi
+        
+        while IFS= read -r line || [ -n "$line" ]; do
+            if [ -n "$line" ]; then
+                case "$line" in
+                    \#!*) continue ;;
+                    \#*) continue ;;
+                    *)
+                        enc=$(echo "$line" | base64 -w 0)
+                        cv="x$(openssl rand -hex 2)"
+                        echo "${cv}='${enc}';eval \$(echo \$${cv}|base64 -d)" >> obfuscated
+                        ;;
+                esac
+            fi
+        done < original
+        
+        chmod +x obfuscated
+
+    - name: Obfuscate JavaScript
+      if: steps.detect.outputs.type == 'javascript'
+      run: |
+        orig_size=$(wc -c < original)
+        ratio="${{ github.event.inputs.size_ratio }}"
+        case "$ratio" in
+          "1.2x") target=$((orig_size * 12 / 10)) ;;
+          "1.5x") target=$((orig_size * 15 / 10)) ;;
+          "2x") target=$((orig_size * 2)) ;;
+          "3x") target=$((orig_size * 3)) ;;
+          *) target=$((orig_size * 15 / 10)) ;;
+        esac
+        
+        echo '#!/usr/bin/env node' > obfuscated
+        
+        dummy_vars=$((target / 25))
+        if [ $dummy_vars -gt 800 ]; then
+            dummy_vars=800
+        fi
+        
+        vars_per_line=20
+        
+        line_num=1
+        while [ $line_num -le $((dummy_vars/vars_per_line)) ]; do
+            line_content=""
+            i=1
+            while [ $i -le $vars_per_line ]; do
+                vn="v$(printf '%04d' $((line_num * vars_per_line + i)))"
+                vv=$(openssl rand -hex 3)
+                
+                if [ $i -eq 1 ]; then
+                    line_content="var ${vn}='${vv}'"
+                else
+                    line_content="${line_content},${vn}='${vv}'"
+                fi
+                i=$((i + 1))
+            done
+            echo "${line_content};" >> obfuscated
+            line_num=$((line_num + 1))
+        done
+        
+        while IFS= read -r line || [ -n "$line" ]; do
+            if [ -n "$line" ]; then
+                case "$line" in
+                    *//*) continue ;;
+                    *)
+                        enc=$(echo "$line" | base64 -w 0)
+                        cv="c$(printf '%04d' $line_num)"
+                        echo "var ${cv}='${enc}';eval(atob(${cv}));" >> obfuscated
+                        line_num=$((line_num + 1))
+                        ;;
+                esac
+            fi
+        done < original
+        
+        chmod +x obfuscated
+
+    - name: Obfuscate HTML
+      if: steps.detect.outputs.type == 'html'
+      run: |
+        orig_size=$(wc -c < original)
+        ratio="${{ github.event.inputs.size_ratio }}"
+        case "$ratio" in
+          "1.2x") target=$((orig_size * 12 / 10)) ;;
+          "1.5x") target=$((orig_size * 15 / 10)) ;;
+          "2x") target=$((orig_size * 2)) ;;
+          "3x") target=$((orig_size * 3)) ;;
+          *) target=$((orig_size * 15 / 10)) ;;
+        esac
+        
+        echo '<!DOCTYPE html>' > obfuscated
+        echo '<html><head><script>' >> obfuscated
+        
+        dummy_vars=$((target / 30))
+        if [ $dummy_vars -gt 500 ]; then
+            dummy_vars=500
+        fi
+        
+        vars_per_line=15
+        
+        line_num=1
+        while [ $line_num -le $((dummy_vars/vars_per_line)) ]; do
+            line_content=""
+            i=1
+            while [ $i -le $vars_per_line ]; do
+                vn="v$(printf '%04d' $((line_num * vars_per_line + i)))"
+                vv=$(openssl rand -hex 3)
+                
+                if [ $i -eq 1 ]; then
+                    line_content="var ${vn}='${vv}'"
+                else
+                    line_content="${line_content},${vn}='${vv}'"
+                fi
+                i=$((i + 1))
+            done
+            echo "${line_content};" >> obfuscated
+            line_num=$((line_num + 1))
+        done
+        
+        html_content=$(cat original | base64 -w 0)
+        echo "var html='${html_content}';" >> obfuscated
+        echo "document.write(atob(html));" >> obfuscated
+        echo '</script></head><body></body></html>' >> obfuscated
+
+    - name: Obfuscate YAML
+      if: steps.detect.outputs.type == 'yaml'
+      run: |
+        orig_size=$(wc -c < original)
+        ratio="${{ github.event.inputs.size_ratio }}"
+        case "$ratio" in
+          "1.2x") target=$((orig_size * 12 / 10)) ;;
+          "1.5x") target=$((orig_size * 15 / 10)) ;;
+          "2x") target=$((orig_size * 2)) ;;
+          "3x") target=$((orig_size * 3)) ;;
+          *) target=$((orig_size * 15 / 10)) ;;
+        esac
+        
+        dummy_vars=$((target / 20))
+        if [ $dummy_vars -gt 300 ]; then
+            dummy_vars=300
+        fi
+        
+        touch obfuscated
+        
+        i=1
+        while [ $i -le $dummy_vars ]; do
+            vn="var$(printf '%04d' $i)"
+            vv=$(openssl rand -hex 3)
+            echo "# ${vn}: ${vv}" >> obfuscated
+            i=$((i + 1))
+        done
+        
+        echo "" >> obfuscated
+        cat original >> obfuscated
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: obfuscated-${{ steps.detect.outputs.type }}-${{ github.run_number }}
+        path: |
+          obfuscated
+          original
+        retention-days: 30

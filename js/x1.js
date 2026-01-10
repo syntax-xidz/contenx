@@ -34,8 +34,8 @@ function setStorageData(key, value) {
 }
 
 const validationRules = {
-    minLength: 5,
-    maxAttempts: 5,
+    minLength: 3,
+    maxAttempts: 3,
     normalLockDuration: 60000,
     profanityLockDuration: 780000,
     minPasswords: 1,
@@ -72,13 +72,12 @@ function calculateValidIndex(seed, multiplier, offset, maxLength) {
 }
 
 function initializeAccessKeys() {
-    const keyVault = ['49534C414D', '414C4C4148', '48414A49', '444F4E415349', '5A414B4154', '52414B4154', '544155422', '534544454B4148', '534142415222', '5441484A5544', '44554141', '494D414E', '444F4E415445', '5441515741', '544157514', '494854414153', '494B48544952', '53594B5552', '544157424548', '4B4142414820'];
+    const keyVault = ['49534C414D', '414C4C4148', '48414A49', '444F4E415349', '5A414B4154', '52414B4154', '544155422', '5441484A5544', '44554141', '494D414E', '444F4E415445', '5441515741', '544157514', '494854414153', '494B48544952', '53594B5552', '544157424548', '4B4142414820', '4D4144494E4148', '4D41534A4944', '5155524E', '53484F4C4154', '505541534120', '49445546495452', '49445541444841', '4B48555442414820', '494D414D', '4D5541445A494E', '494E444F4E45534941', '4A415741', '42415441564941', '4A414B41525441', '53554B41524E4F', '4841545441', '47415255444120', '42494E4E454B41', '4E5553414E544152412020', '47414D454C414E', '574159414E47', '4B45524953', '4241544B', '474F544F4E47', '42414E475341', '4D4552444B41', '50414E434153494C41', '54554E4747414C', '554E495459', '424F524F425544555220', '5052414D42414E414E', '42414C49', '53554D41544552412020', '4B414C494D414E54414E', '53554C4157455349', '5041505541', '4D414C554B55', '4A4F474A41', '42414E44554E47', '535552414241594120', '4D4544414E', '53454D4152414E47', '4D414B4153534152', '50414C454D42414E47', '424F474F52', '534F4C4F', '4D414C414E47', '42454B415349', '54414E474552414E47', '44455057', '5241484D4154', '42455242554B41', '534148555220', '5441524157494820', '4C41494C41545551414452', '464954524148', '53554E4E4148', '48414449545320', '554C414D41', '53414E545249'];
     
-    const idx1 = calculateValidIndex(2, 1, 1, 20);
-    const idx2 = calculateValidIndex(3, 1, 4, 20);
-    const idx3 = calculateValidIndex(6, 2, 0, 20);
+    const idx1 = calculateValidIndex(2, 1, 1, 78);
+    const idx2 = calculateValidIndex(5, 2, 0, 78);
     
-    const validAccessKeys = [keyVault[idx1], keyVault[idx2], keyVault[idx3]];
+    const validAccessKeys = [keyVault[idx1], keyVault[idx2]];
     
     const shuffled = validAccessKeys.sort(() => 0.5 - Math.random());
     const selectedCount = Math.floor(Math.random() * (validationRules.maxPasswords - validationRules.minPasswords + 1)) + validationRules.minPasswords;

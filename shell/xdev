@@ -3978,14 +3978,14 @@ install_xidzbot() {
     
     mkdir -p /tmp/xidzbot
     
-    if curl -sL "https://raw.githubusercontent.com/de-quenx/x-founds/main/xidz/xidzs" -o /tmp/xidzbot/xidzs; then
+    if curl -sL "https://raw.githubusercontent.com/syntax-xidz/contenx/main/shell/xidzs" -o /tmp/xidzbot/xidzs; then
         log_info "Download xidzs successful"
     else
         log_error "Failed to download xidzs script"
         return 1
     fi
     
-    if curl -sL "https://raw.githubusercontent.com/de-quenx/x-founds/main/xidz/xidz" -o /tmp/xidzbot/xidz; then
+    if curl -sL "https://raw.githubusercontent.com/syntax-xidz/contenx/main/shell/xidz" -o /tmp/xidzbot/xidz; then
         log_info "Download xidz successful"
     else
         log_error "Failed to download xidz script"

@@ -77,6 +77,7 @@ const contentData = {
     preview: {
         items: [
             { title: 'Tema AlphaOs', image: '../asset/alpha.png' },
+            { title: 'Tema Argon Glass', image: '../asset/argon_glass.png' },
             { title: 'Tema Argon Light', image: '../asset/argon_light.png' },
             { title: 'Tema Rtawrt Light', image: '../asset/rta_light.png' },
             { title: 'Tema Argon Dark', image: '../asset/argon_dark.png' },

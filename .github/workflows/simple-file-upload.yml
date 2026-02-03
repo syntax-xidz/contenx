@@ -1,0 +1,175 @@
+name: Simple file Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        required: true
+        default: 'v1.0.0'
+      url:
+        required: true
+        default: 'https://github.com'
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download and Upload
+        run: |
+          # Install tools
+          sudo apt-get update >/dev/null 2>&1
+          sudo apt-get install -y megatools aria2 >/dev/null 2>&1
+          pip install gdown >/dev/null 2>&1
+          
+          url="${{ github.event.inputs.url }}"
+          tag="${{ github.event.inputs.tag }}"
+          
+          echo "🔗 URL: $url"
+          echo "🏷️ Tag: $tag"
+          echo ""
+          echo "⬇️ Downloading..."
+          
+          # Download with proper validation
+          if [[ "$url" =~ github\.com ]]; then
+            # GitHub - reliable
+            filename=$(basename "$url" | cut -d'?' -f1)
+            echo "📁 GitHub file: $filename"
+            if curl -fsSL -o "$filename" "$url"; then
+              echo "✅ GitHub download OK"
+            else
+              echo "❌ GitHub download failed"
+              exit 1
+            fi
+            
+          elif [[ "$url" =~ drive\.google\.com ]]; then
+            # Google Drive - fix size issue
+            echo "📁 Google Drive detected"
+            id=$(echo "$url" | sed -n 's/.*\/d\/\([^\/]*\).*/\1/p')
+            [[ -z "$id" ]] && id=$(echo "$url" | sed -n 's/.*id=\([^&]*\).*/\1/p')
+            
+            if [[ -n "$id" ]]; then
+              echo "🆔 File ID: $id"
+              
+              # Method 1: gdown with validation
+              if gdown "$id" -O "temp_file" --quiet 2>/dev/null; then
+                # Check if it's actually a file (not HTML error)
+                if file "temp_file" | grep -q "HTML\|text" && [[ $(stat -c%s "temp_file") -lt 10000 ]]; then
+                  echo "⚠️ Got HTML response, trying alternative..."
+                  rm -f "temp_file"
+                  
+                  # Method 2: Direct download with confirm bypass
+                  echo "🔄 Trying direct method..."
+                  if aria2c -q -o "temp_file2" "https://drive.google.com/uc?export=download&id=$id&confirm=t" 2>/dev/null; then
+                    filename="temp_file2"
+                    echo "✅ Direct method OK"
+                  else
+                    echo "❌ Google Drive download failed"
+                    exit 1
+                  fi
+                else
+                  filename="temp_file"
+                  echo "✅ gdown method OK"
+                fi
+              else
+                echo "❌ gdown failed"
+                exit 1
+              fi
+              
+              # Rename to proper name
+              final_name="gdrive-$(echo $id | cut -c1-8)"
+              mv "$filename" "$final_name"
+              filename="$final_name"
+            else
+              echo "❌ Cannot extract Google Drive ID"
+              exit 1
+            fi
+            
+          elif [[ "$url" =~ mega\.nz ]]; then
+            # MEGA
+            echo "📁 MEGA detected"
+            if megadl "$url" --path=. >/dev/null 2>&1; then
+              filename=$(find . -maxdepth 1 -type f -newer /tmp -not -name "*.py" -not -name "*.yml" 2>/dev/null | head -1)
+              if [[ -f "$filename" ]]; then
+                filename=$(basename "$filename")
+                echo "✅ MEGA download OK: $filename"
+              else
+                echo "❌ MEGA download failed"
+                exit 1
+              fi
+            else
+              echo "❌ MEGA download failed"
+              exit 1
+            fi
+            
+          else
+            # Direct URL
+            echo "📁 Direct URL detected"
+            filename=$(basename "$url" | cut -d'?' -f1)
+            [[ -z "$filename" || "$filename" == "/" ]] && filename="direct-file"
+            
+            # Try multiple methods
+            if aria2c -q -o "$filename" "$url" 2>/dev/null; then
+              echo "✅ aria2c download OK"
+            elif curl -fsSL -o "$filename" "$url"; then
+              echo "✅ curl download OK"
+            elif wget -q -O "$filename" "$url"; then
+              echo "✅ wget download OK"
+            else
+              echo "❌ Direct download failed"
+              exit 1
+            fi
+          fi
+          
+          # Validate download
+          if [[ -f "$filename" ]]; then
+            size=$(stat -c%s "$filename")
+            
+            # Check if file is valid
+            if [[ "$size" -eq 0 ]]; then
+              echo "❌ File is empty (0 bytes)"
+              exit 1
+            elif [[ "$size" -lt 100 ]]; then
+              echo "⚠️ File very small ($size bytes), checking content..."
+              if file "$filename" | grep -q "HTML\|text"; then
+                echo "❌ File contains HTML/text (likely error page)"
+                echo "Content preview:"
+                head -3 "$filename"
+                exit 1
+              fi
+            fi
+            
+            echo "✅ File valid: $filename ($size bytes)"
+          else
+            echo "❌ No file downloaded"
+            exit 1
+          fi
+          
+          # Upload to release
+          echo ""
+          echo "⬆️ Uploading to release..."
+          
+          if gh release view "$tag" >/dev/null 2>&1; then
+            if gh release upload "$tag" "$filename" --clobber; then
+              echo "✅ Added to existing release: $tag"
+            else
+              echo "❌ Upload to existing release failed"
+              exit 1
+            fi
+          else
+            if gh release create "$tag" "$filename"; then
+              echo "✅ Created new release: $tag"
+            else
+              echo "❌ Create new release failed"
+              exit 1
+            fi
+          fi
+          
+          echo ""
+          echo "🎉 Success!"
+          echo "   File: $filename"
+          echo "   Size: $size bytes"
+          echo "   Tag: $tag"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

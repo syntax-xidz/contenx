@@ -13,4 +13,4 @@ Dibuat khusus buat sobat Indonesia yang pengen anti ribet tanpa drama. Simple, p
 Backup dulu ya sebelum oprek-oprek. Kalau Gak Booting jangan nangis...!
 
 ---
-© 2026 XIDZs-WRT PROJECT | INDONESIA
+© 2026 XIDZs-WRT

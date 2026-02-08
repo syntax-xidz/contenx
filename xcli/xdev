@@ -2,7 +2,7 @@
 #
 # Created By Fidz
 # Dilarang Remod atau Edit Tools Ini Tanpa Ijin
-# © XIDZs-WRT PROJECT | 17 Januari 2026
+# © XIDZs-WRT PROJECT | 08 Februari 2026
 # https://github.com/de-quenx
 # https://t.me/xidz_x
 # xidzs-wrt.web.id
@@ -11,8 +11,8 @@
 ix_code() {
     {
         local script_count=$(wc -l < "$0")
-        local x_inx=5322
-        local x_idx=5355
+        local x_inx=5335
+        local x_idx=5365
         
         [[ $script_count -gt $x_inx ]] || return 1
         [[ $script_count -le $x_idx ]] || return 1
@@ -20,7 +20,7 @@ ix_code() {
     
     {
         local file_bytes=$(stat -c %s "$0" 2>/dev/null || echo "0")
-        local x_id=167890
+        local x_id=176543
         
         [[ $file_bytes -gt $x_id ]] || return 1
     }
@@ -1172,8 +1172,10 @@ select_nikki_repo() {
     echo ""
     echo "  1) nikkinikki-org (Official)"
     echo "  2) de-quenx (Modified)"
+    echo "  3) syntax-xidz (Modified)"
+    echo "  4) Yogxx (Modified)"
     echo ""
-    echo -n "Pilih [1-2]: "
+    echo -n "Pilih [1-4]: "
     read repo_choice
     
     case $repo_choice in
@@ -1184,6 +1186,14 @@ select_nikki_repo() {
         2)
             log_info "Repository: de-quenx (Modified)"
             NIKKI_REPO="https://api.github.com/repos/de-quenx/nikki-x/releases"
+            ;;
+        3)
+            log_info "Repository: syntax-xidz (Modified)"
+            NIKKI_REPO="https://api.github.com/repos/syntax-xidz/nikki-x/releases"
+            ;;
+        4)
+            log_info "Repository: Yogxx (Modified)"
+            NIKKI_REPO="https://api.github.com/repos/Yogxx/OpenWrt-nikkiku/releases"
             ;;
         *)
             log_warn "Pilihan salah, menggunakan Official"
@@ -3978,14 +3988,14 @@ install_xidzbot() {
     
     mkdir -p /tmp/xidzbot
     
-    if curl -sL "https://raw.githubusercontent.com/syntax-xidz/contenx/main/shell/xidzs" -o /tmp/xidzbot/xidzs; then
+    if curl -sL "https://raw.githubusercontent.com/syntax-xidz/contenx/main/xcli/xidzs" -o /tmp/xidzbot/xidzs; then
         log_info "Download xidzs successful"
     else
         log_error "Failed to download xidzs script"
         return 1
     fi
     
-    if curl -sL "https://raw.githubusercontent.com/syntax-xidz/contenx/main/shell/xidz" -o /tmp/xidzbot/xidz; then
+    if curl -sL "https://raw.githubusercontent.com/syntax-xidz/contenx/main/xcli/xidz" -o /tmp/xidzbot/xidz; then
         log_info "Download xidz successful"
     else
         log_error "Failed to download xidz script"
@@ -4557,14 +4567,14 @@ patch_openclash() {
     
     mkdir -p /tmp/patchoc
     
-    if curl -sL "https://raw.githubusercontent.com/syntax-xidz/contenx/main/shell/oc.zip" -o /tmp/patchoc/oc.zip; then
+    if curl -sL "https://raw.githubusercontent.com/syntax-xidz/contenx/main/xcli/oc.zip" -o /tmp/patchoc/oc.zip; then
         log_info "Download patch oc successful"
     else
         log_error "Failed to download patch oc"
         return 1
     fi
     
-    if curl -sL "https://raw.githubusercontent.com/syntax-xidz/contenx/main/shell/oceditor.php" -o /tmp/patchoc/oceditor.php; then
+    if curl -sL "https://raw.githubusercontent.com/syntax-xidz/contenx/main/xcli/oceditor.php" -o /tmp/patchoc/oceditor.php; then
         log_info "Download oceditor successful"
     else
         log_error "Failed to download oceditor"

@@ -115,7 +115,7 @@ const contentData = {
     features: {
         items: [
             { title: 'Fitur Utama', list: ['Tema Argon ⨯ Tema Alpha', 'Amlogic Service ( Amlogic Devices )', '3ginfo-Lite ⨯ Modeminfo ⨯ IP Information', 'Fix TTL ⨯ Tailscale ⨯ Netmonitor', 'Eqosplus ⨯ Droidnet ⨯ File manager', 'GPIO LED Support', 'MODSDCARD Support HG680P - B860H', 'Tersedia WIFI ON | OFF HG680P - B860H', 'Internet Detector ⨯ Connection Monitor', 'XDEV Script Tools ⨯ XIDZs Bot Monitoring', 'Configurasi Openclash ⨯ Nikki', 'Configurasi Insomclash ⨯ Passwall'] },
-            { title: 'Khusus Amlogic Devices Tertentu', list: ['Kernel Versi 5.15.x', 'Kernel Versi 6.1.x', 'Kernel Versi 6.6.x'] },
+            { title: 'Khusus Amlogic Devices Tertentu', list: ['Kernel Versi 5.15.x', 'Kernel Versi 5.4.x', 'Kernel Versi 6.1.x', 'Kernel Versi 6.2.x', 'Kernel Versi 6.3.x', 'Kernel Versi 6.4.x', 'Kernel Versi 6.6.x'] },
             { title: 'Tunnel Options', list: ['OpenClash', 'OpenClash + Nikki', 'Openclash + Insomclash', 'OpenClash + Nikki + Passwall', 'No Tunnel'] }
         ]
     },
@@ -123,7 +123,7 @@ const contentData = {
         items: [
             { 
                 title: 'Tentang XIDZs-WRT', 
-                description: 'XIDZs-WRT Adalah Sebuah Firmware Custom Yang Dikembangkan Untuk Komunitas Openwrt Indonesia. Project Ini Bertujuan Untuk Memberikan Pengalaman Networking Yang Lebih Baik Dengan Fitur-Fitur Yang Disesuaikan Dengan Kebutuhan Pengguna, Terimakasih.' 
+                description: 'XIDZs-WRT Adalah Sebuah Firmware Custom Yang Dikembangkan Untuk Komunitas Openwrt Indonesia. Project Ini Bertujuan Untuk Memberikan Pengalaman Networking Yang Lebih Baik Dengan Fitur-Fitur Yang Disesuaikan Dengan Kebutuhan Pengguna, Jangan Lupa Feedbacknya, Terimakasih.' 
             }
         ]
     }

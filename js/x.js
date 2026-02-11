@@ -105,10 +105,10 @@ const contentData = {
             { title: 'Amlogic s905x2 Series', list: ['Amlogic s905x2 B860Hv5', 'Amlogic s905x2 HG680-FJ', 'Amlogic s905x2 X96Max-v2Gb', 'Amlogic s905x2 X96Max-v4Gb'] },
             { title: 'Amlogic s905x3 Series', list: ['Amlogic s905x3 HK1-Vontar-X3', 'Amlogic s905x3 X96Air_100Mb', 'Amlogic s905x3 X96Air_1Gb', 'Amlogic s905x3 X96Max+_100Mb', 'Amlogic s905x3 X96Max+_1Gb', 'Amlogic s905x3 H96-Max-X3'] },
             { title: 'Amlogic Other Series', list: ['Amlogic s905x4 Ax810', 'Amlogic s905x4 Advan-At01', 'Amlogic s912 Nexbox-A1-A95X', 'Amlogic s912 Nexbox-A95X-A2', 'Amlogic s922x GT-King-Pro'] },
-            { title: 'Orange Pi Series', list: ['Orange Pi Pc 2', 'Orange Pi R1 Plus', 'Orange Pi R1 Plus LTS', 'Orange Pi 3B', 'Orange Pi Zero Plus', 'Orange Pi Zero Plus 2', 'Orange Pi 3', 'Orange Pi 3 LTS', 'Orange Pi Zero 2', 'Orange Pi Zero 3'] },
+            { title: 'Orange Pi Series', list: ['Orange Pi Pc 2', 'Orange Pi R1 Plus', 'Orange Pi R1 Plus LTS', 'Orange Pi 3B', 'Orange Pi 5B', 'Orange Pi 5 Plus', 'Orange Pi Zero Plus', 'Orange Pi Zero Plus 2', 'Orange Pi 3', 'Orange Pi 3 LTS', 'Orange Pi Zero 2', 'Orange Pi Zero 3'] },
             { title: 'Raspberry Pi Series', list: ['Raspberry Pi B', 'Raspberry Pi 2B', 'Raspberry Pi 3B', 'Raspberry Pi 4B', 'Raspberry Pi 5B'] },
             { title: 'Nanopi Series', list: ['Nanopi-r2c', 'Nanopi-r2c Plus', 'Nanopi-r2s', 'Nanopi-r2s Plus', 'Nanopi-r3s', 'Nanopi-r4s', 'Nanopi-r5s'] },
-            { title: 'Rockchip Series', list: ['RK3318-BOX', 'Firefly-Rk3328', 'Rk3399 King3399'] },
+            { title: 'Rockchip Series', list: ['Rk3318-BOX', 'Firefly-Rk3328', 'Rk3399-King3399', 'Rk3566-Panther-X2', 'Rk3588-Rock5B', 'Rk3576-NanoPi M5', 'Rk3528-H96 Max-M2'] },
             { title: 'X86 Series', list: ['X86-Generic', 'X86-64'] }
         ]
     },

@@ -1,0 +1,54 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+
+SCREEN_NAME="xidz"
+BOT_SCRIPT="/usr/bin/xidz"
+
+start() {
+    if screen -list | grep -q "$SCREEN_NAME"; then
+        echo "XIDZs Bot is already running"
+        return 0
+    fi
+    
+    echo "Starting XIDZs Bot in screen session..."
+    screen -dmS "$SCREEN_NAME" "$BOT_SCRIPT"
+    
+    sleep 2
+    
+    if screen -list | grep -q "$SCREEN_NAME"; then
+        echo "XIDZs Bot started successfully"
+    else
+        echo "Failed to start XIDZs Bot"
+        return 1
+    fi
+}
+
+stop() {
+    echo "Stopping XIDZs Bot..."
+    screen -S "$SCREEN_NAME" -X quit 2>/dev/null
+    killall -9 xidz 2>/dev/null
+    echo "XIDZs Bot stopped"
+}
+
+restart() {
+    stop
+    sleep 3
+    start
+}
+
+status() {
+    if screen -list | grep -q "$SCREEN_NAME"; then
+        echo "XIDZs Bot is running in screen"
+        echo ""
+        echo "Screen session: $SCREEN_NAME"
+        echo "To monitor: screen -r $SCREEN_NAME"
+        echo ""
+        if [ -x "/usr/bin/xidz" ]; then
+            /usr/bin/xidz status
+        fi
+    else
+        echo "XIDZs Bot is not running"
+    fi
+}

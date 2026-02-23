@@ -1,0 +1,31 @@
+name: Multi-URL 
+
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: 'Masukkan URL (pisahkan dengan koma atau spasi)'
+        required: true
+        default: 'google.com, baidu.com'
+
+jobs:
+  check-urls:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Connectivity
+        run: |
+          IFS=', ' read -r -a URL_ARRAY <<< "${{ github.event.inputs.urls }}"
+          for url in "${URL_ARRAY[@]}"; do
+            echo "--- Testing: $url ---"
+            clean_url=$(echo $url | sed 's/https\?:\/\///')
+            
+            echo "1. HTTP Status:"
+            curl -s -I --connect-timeout 10 "$url" | head -n 1 || echo "Failed to connect"
+            
+            echo -e "\n2. DNS Lookup:"
+            nslookup "$clean_url" | grep "Address" || echo "DNS failed"
+            
+            echo -e "\n3. Ping Test (3 packets):"
+            ping -c 3 "$clean_url" || echo "Ping failed"
+            echo -e "----------------------------\n"
+          done

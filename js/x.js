@@ -114,8 +114,8 @@ const contentData = {
     },
     features: {
         items: [
-            { title: 'Fitur - Fitur', list: ['Tema Argon ⨯ Tema Alpha', 'Amlogic Service ( Amlogic Devices )', '3ginfo-Lite ⨯ Modeminfo ⨯ IP Information', 'Fix TTL ⨯ Tailscale ⨯ Netmonitor', 'Eqosplus ⨯ Droidnet ⨯ File manager', 'GPIO LED Support', 'MODSDCARD Support HG680P - B860H', 'Tersedia WIFI ON | OFF HG680P - B860H', 'Versi WIFION > Kernel Stable', 'Versi WIFIOFF > Kernel Flippy', 'Internet Detector ⨯ Connection Monitor', 'XDEV Script Tools ⨯ XIDZs Bot Monitoring', 'Configurasi Openclash ⨯ Nikki', 'Configurasi Insomclash ⨯ Passwall'] },
-            { title: 'Khusus Amlogic Devices Tertentu', list: ['Kernel Versi 5.15.x', 'Kernel Versi 5.4.x', 'Kernel Versi 6.1.x', 'Kernel Versi 6.2.x', 'Kernel Versi 6.3.x', 'Kernel Versi 6.4.x', 'Kernel Versi 6.6.x', 'Kernel Versi 6.12.x'] },
+            { title: 'Fitur - Fitur', list: ['Tema Argon', 'Amlogic Service ( Amlogic Devices )', '3ginfo-Lite ⨯ Modeminfo ⨯ IP Information', 'Fix TTL ⨯ Tailscale ⨯ Netmonitor', 'Eqosplus ⨯ Droidnet ⨯ File manager', 'GPIO LED Support', 'MODSDCARD Support HG680P - B860H', 'Tersedia WIFI ON | OFF HG680P - B860H', 'Versi WIFION - Kernel Stable', 'Versi WIFIOFF - Kernel Flippy', 'Internet Detector ⨯ Connection Monitor', 'XDEV Script Tools ⨯ XIDZs Bot Monitoring', 'Configurasi Openclash ⨯ Nikki', 'Configurasi Insomclash ⨯ Passwall'] },
+            { title: 'Khusus Amlogic Devices Tertentu', list: ['Kernel Versi 5.15.x - 5.4.x', 'Kernel Versi 6.1.x - 6.2.x', 'Kernel Versi 6.3.x - 6.4.x', 'Kernel Versi 6.6.x - 6.12.x'] },
             { title: 'Tunnel Options', list: ['OpenClash', 'OpenClash + Nikki', 'Openclash + Insomclash', 'OpenClash + Nikki + Passwall', 'No Tunnel'] }
         ]
     },

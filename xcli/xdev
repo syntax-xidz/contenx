@@ -139,10 +139,10 @@ show_menu() {
     echo "  1) OpenClash"
     echo "  2) PassWall"
     echo "  3) Nikki"
-    echo "  4) InsomClash"
-    echo "  5) Nikki + InsomClash"
+    echo "  4) Fusiontunx"
+    echo "  5) Nikki + Fusiontunx"
     echo "  6) OpenClash + Nikki"
-    echo "  7) OpenClash + InsomClash"
+    echo "  7) OpenClash + Fusiontunx"
     echo "  8) OpenClash + PassWall"
     echo "  9) PassWall + Nikki"
     echo "  10) All Tunnel"
@@ -150,7 +150,7 @@ show_menu() {
     echo "MIHOMO CORE:"
     echo "  11) OpenClash Core"
     echo "  12) Nikki Core"
-    echo "  13) Insomclash Core"
+    echo "  13) Fusiontunx Core"
     echo ""
     echo "TOOLS:"
     echo "  14) Bandix"
@@ -378,8 +378,8 @@ is_package_installed() {
         luci-app-openclash) config_name="openclash" ;;
         luci-app-passwall)  config_name="passwall" ;;
         nikki|luci-app-nikki) config_name="nikki" ;;
-        insomclash|luci-app-insomclash) 
-            config_name="insomclash"
+        fusiontunx|luci-app-fusiontunx) 
+            config_name="fusiontunx"
             use_dir=true
             ;;
         bandix|luci-app-bandix) config_name="bandix" ;;
@@ -432,17 +432,17 @@ get_related_packages() {
                 [[ "$pkg" =~ ^nikki ]] && [[ "$pkg" != "luci-app-nikki" ]] && related_pkgs+=("$pkg")
             done < <(opkg list-installed 2>/dev/null | awk '/^nikki/{print $1}')
             ;;
-        insomclash)
+        fusiontunx)
             related_pkgs+=("$main_pkg")
             while IFS= read -r pkg; do
-                [[ "$pkg" =~ ^insomclash ]] && [[ "$pkg" != "insomclash" ]] && related_pkgs+=("$pkg")
-            done < <(opkg list-installed 2>/dev/null | awk '/^insomclash/{print $1}')
+                [[ "$pkg" =~ ^fusiontunx ]] && [[ "$pkg" != "fusiontunx" ]] && related_pkgs+=("$pkg")
+            done < <(opkg list-installed 2>/dev/null | awk '/^fusiontunx/{print $1}')
             ;;
-        luci-app-insomclash)
+        luci-app-fusiontunx)
             related_pkgs+=("$main_pkg")
             while IFS= read -r pkg; do
-                [[ "$pkg" =~ ^insomclash ]] && [[ "$pkg" != "luci-app-insomclash" ]] && related_pkgs+=("$pkg")
-            done < <(opkg list-installed 2>/dev/null | awk '/^insomclash/{print $1}')
+                [[ "$pkg" =~ ^fusiontunx ]] && [[ "$pkg" != "luci-app-fusiontunx" ]] && related_pkgs+=("$pkg")
+            done < <(opkg list-installed 2>/dev/null | awk '/^fusiontunx/{print $1}')
             ;;
         bandix)
             related_pkgs+=("$main_pkg")
@@ -530,7 +530,7 @@ install_package_simple() {
     
     log_info "Menginstall: $pkg_name"
     
-    if [[ "$pkg_name" == "insomclash"*.ipk ]]; then
+    if [[ "$pkg_name" == "fusiontunx"*.ipk ]]; then
         if opkg install --force-space "$pkg_file" 2>/dev/null; then
             log_info "✓ Berhasil install: $pkg_name ⍟"
             return 0
@@ -723,18 +723,18 @@ download_nikki_core() {
     download_mihomo_core "/usr/bin/mihomo" "NIKKI"
 }
 
-download_insomclash_core() {
+download_fusiontunx_core() {
     show_banner
     echo ""
     log_blue "=========================================="
-    log_blue "        DOWNLOAD INSOMCLASH CORE"
+    log_blue "        DOWNLOAD fusiontunx CORE"
     log_blue "=========================================="
     
     select_architecture
     select_core_version
     
     echo ""
-    download_mihomo_core "/usr/bin/mihomo" "INSOMCLASH"
+    download_mihomo_core "/usr/bin/mihomo" "fusiontunx"
 }
 
 restart_services() {
@@ -1346,15 +1346,15 @@ install_nikki() {
     fi
 }
 
-install_insomclash() {
+install_fusiontunx() {
     log_blue "=========================================="
-    log_blue "         INSTALL INSOMCLASH"
+    log_blue "         INSTALL FUSIONTUNX"
     log_blue "=========================================="
     echo ""
     
-    mkdir -p /tmp/insomclash
+    mkdir -p /tmp/fusiontunx
     
-    log_info "Mengambil versi latest Insomclash dari GitHub..."
+    log_info "Mengambil versi latest fusiontunx dari GitHub..."
     
     local latest_release=$(curl -s "https://api.github.com/repos/bobbyunknown/FusionTunX/releases/latest")
     
@@ -1376,24 +1376,24 @@ install_insomclash() {
             arch_suffix="aarch64_generic"
             ;;
         *)
-            log_error "Arsitektur tidak didukung untuk InsomClash Tunnel: ${ARCH_3}"
-            log_warn "InsomClash hanya support x86_64 dan aarch64"
+            log_error "Arsitektur tidak didukung untuk fusiontunx Tunnel: ${ARCH_3}"
+            log_warn "fusiontunx hanya support x86_64 dan aarch64"
             return 1
             ;;
     esac
     
     log_info "Arsitektur target: ${ARCH_3} → ${arch_suffix}"
     
-    local insomclash_core_url=$(echo "$latest_release" | grep "browser_download_url" | grep "/insomclash_" | grep "${arch_suffix}\.ipk" | head -n 1 | cut -d '"' -f 4)
-    local insomclash_luci_url=$(echo "$latest_release" | grep "browser_download_url" | grep "/luci-app-insomclash_" | grep "\.ipk" | head -n 1 | cut -d '"' -f 4)
+    local fusiontunx_core_url=$(echo "$latest_release" | grep "browser_download_url" | grep "/fusiontunx_" | grep "${arch_suffix}\.ipk" | head -n 1 | cut -d '"' -f 4)
+    local fusiontunx_luci_url=$(echo "$latest_release" | grep "browser_download_url" | grep "/luci-app-fusiontunx_" | grep "\.ipk" | head -n 1 | cut -d '"' -f 4)
     
-    if [ -z "$insomclash_core_url" ]; then
-        log_error "URL InsomClash core tidak ditemukan untuk arsitektur: ${arch_suffix}"
+    if [ -z "$fusiontunx_core_url" ]; then
+        log_error "URL fusiontunx core tidak ditemukan untuk arsitektur: ${arch_suffix}"
         return 1
     fi
     
-    if [ -z "$insomclash_luci_url" ]; then
-        log_error "URL LuCI InsomClash tidak ditemukan"
+    if [ -z "$fusiontunx_luci_url" ]; then
+        log_error "URL LuCI fusiontunx tidak ditemukan"
         return 1
     fi
     
@@ -1401,27 +1401,27 @@ install_insomclash() {
     local packages_failed=0
     
     log_blue "=========================================="
-    log_blue "        DOWNLOAD INSOMCLASH"
+    log_blue "        DOWNLOAD fusiontunx"
     log_blue "=========================================="
     
-    log_info "Download dari: $(basename "$insomclash_core_url")"
+    log_info "Download dari: $(basename "$fusiontunx_core_url")"
     
-    if ! download_file "$insomclash_core_url" "/tmp/insomclash/insomclash.ipk"; then
-        log_error "Gagal download InsomClash core"
-        rm -rf /tmp/insomclash
+    if ! download_file "$fusiontunx_core_url" "/tmp/fusiontunx/fusiontunx.ipk"; then
+        log_error "Gagal download fusiontunx core"
+        rm -rf /tmp/fusiontunx
         return 1
     fi
     
     echo ""
     log_blue "=========================================="
-    log_blue "       DOWNLOAD LUCI-APP-INSOMCLASH"
+    log_blue "       DOWNLOAD LUCI-APP-fusiontunx"
     log_blue "=========================================="
     
-    log_info "Download dari: $(basename "$insomclash_luci_url")"
+    log_info "Download dari: $(basename "$fusiontunx_luci_url")"
     
-    if ! download_file "$insomclash_luci_url" "/tmp/insomclash/luci-app-insomclash.ipk"; then
-        log_error "Gagal download LuCI InsomClash"
-        rm -rf /tmp/insomclash
+    if ! download_file "$fusiontunx_luci_url" "/tmp/fusiontunx/luci-app-fusiontunx.ipk"; then
+        log_error "Gagal download LuCI fusiontunx"
+        rm -rf /tmp/fusiontunx
         return 1
     fi
     
@@ -1430,7 +1430,7 @@ install_insomclash() {
     echo ""
     
     log_blue "=========================================="
-    log_blue "          INSTALL INSOMCLASH"
+    log_blue "          INSTALL FUSIONTUNX"
     log_blue "=========================================="
     
     log_info "Cek file mihomo core..."
@@ -1442,49 +1442,49 @@ install_insomclash() {
         log_info "✓ mihomo core tidak ada, lanjutkan install"
     fi
     
-    log_info "Installing InsomClash core $version (dependency)..."
+    log_info "Installing fusiontunx core $version (dependency)..."
     
-    if install_package_simple "/tmp/insomclash/insomclash.ipk"; then
+    if install_package_simple "/tmp/fusiontunx/fusiontunx.ipk"; then
         ((packages_installed++))
-        log_info "✓ InsomClash core $version berhasil diinstall"
+        log_info "✓ fusiontunx core $version berhasil diinstall"
     else
         ((packages_failed++))
-        log_error "✗ Gagal install InsomClash core"
+        log_error "✗ Gagal install fusiontunx core"
     fi
     
     echo ""
     log_blue "=========================================="
-    log_blue "      INSTALL LUCI-APP-INSOMCLASH"
+    log_blue "      INSTALL LUCI-APP-FUSIONTUNX"
     log_blue "=========================================="
     
-    log_info "Installing LuCI InsomClash $version..."
+    log_info "Installing LuCI fusiontunx $version..."
     
-    if install_package_simple "/tmp/insomclash/luci-app-insomclash.ipk"; then
+    if install_package_simple "/tmp/fusiontunx/luci-app-fusiontunx.ipk"; then
         ((packages_installed++))
-        log_info "✓ LuCI InsomClash $version berhasil diinstall"
+        log_info "✓ LuCI fusiontunx $version berhasil diinstall"
     else
         ((packages_failed++))
-        log_error "✗ Gagal install LuCI InsomClash"
+        log_error "✗ Gagal install LuCI fusiontunx"
     fi
     
     echo ""
-    log_info "Hasil instalasi InsomClash:"
+    log_info "Hasil instalasi fusiontunx:"
     log_info "  - Berhasil: $packages_installed packages"
     log_info "  - Version: $version"
     if [ $packages_failed -gt 0 ]; then
         log_warn "  - Gagal: $packages_failed packages"
     fi
     
-    rm -rf /tmp/insomclash
+    rm -rf /tmp/fusiontunx
     
     if [ $packages_installed -ge 2 ]; then
-        log_info "InsomClash berhasil diinstall lengkap (core + luci)"
+        log_info "fusiontunx berhasil diinstall lengkap (core + luci)"
         return 0
     elif [ $packages_installed -eq 1 ]; then
-        log_warn "InsomClash terinstall sebagian (hanya core)"
+        log_warn "fusiontunx terinstall sebagian (hanya core)"
         return 1
     else
-        log_error "Gagal install InsomClash"
+        log_error "Gagal install fusiontunx"
         return 1
     fi
 }
@@ -4717,17 +4717,17 @@ remove_app_folders() {
                     rm -rf /etc/nikki 2>/dev/null
                     log_info "Konfigurasi Nikki Tunnel dihapus"
                     ;;
-                insomclash)
-                    rm -f /etc/config/insomclash 2>/dev/null
+                fusiontunx)
+                    rm -f /etc/config/fusiontunx 2>/dev/null
                     rm -f /usr/bin/mihomo 2>/dev/null
-                    rm -rf /etc/insomclash 2>/dev/null
-                    log_info "Konfigurasi Insomclash Tunnel dihapus"
+                    rm -rf /etc/fusiontunx 2>/dev/null
+                    log_info "Konfigurasi fusiontunx Tunnel dihapus"
                     ;;
-                luci-app-insomclash)
-                    rm -f /etc/config/insomclash 2>/dev/null
+                luci-app-fusiontunx)
+                    rm -f /etc/config/fusiontunx 2>/dev/null
                     rm -f /usr/bin/mihomo 2>/dev/null
-                    rm -rf /etc/insomclash 2>/dev/null
-                    log_info "Konfigurasi Insomclash Tunnel dihapus"
+                    rm -rf /etc/fusiontunx 2>/dev/null
+                    log_info "Konfigurasi fusiontunx Tunnel dihapus"
                     ;;
                 luci-app-passwall)
                     rm -f /etc/config/passwall 2>/dev/null
@@ -4795,7 +4795,7 @@ uninstall_app() {
     
     if [ ${#related_packages[@]} -eq 0 ]; then
         case "$pkg" in
-            luci-app-openclash|nikki|luci-app-nikki|insomclash|luci-app-insomclash|luci-app-passwall)
+            luci-app-openclash|nikki|luci-app-nikki|fusiontunx|luci-app-fusiontunx|luci-app-passwall)
                 log_warn "Tidak ada Tunnel $pkg yang terinstall"
                 ;;
             bandix|luci-app-bandix|luci-app-netmonitor|modemdata|luci-app-modemdata|webdroidx|andromodem|luci-app-andromodem)
@@ -4837,7 +4837,7 @@ uninstall_app() {
     
     if [ $removed_count -gt 0 ]; then
         case "$pkg" in
-            luci-app-openclash|nikki|luci-app-nikki|insomclash|luci-app-insomclash|luci-app-passwall)
+            luci-app-openclash|nikki|luci-app-nikki|fusiontunx|luci-app-fusiontunx|luci-app-passwall)
                 log_info "$pkg Tunnel berhasil dihapus"
                 ;;
             bandix|luci-app-bandix|luci-app-netmonitor|modemdata|luci-app-modemdata|webdroidx|andromodem|luci-app-andromodem)
@@ -4847,7 +4847,7 @@ uninstall_app() {
         return 0
     else
         case "$pkg" in
-            luci-app-openclash|nikki|luci-app-nikki|insomclash|luci-app-insomclash|luci-app-passwall)
+            luci-app-openclash|nikki|luci-app-nikki|fusiontunx|luci-app-fusiontunx|luci-app-passwall)
                 log_error "Gagal menghapus $pkg Tunnel"
                 ;;
             bandix|luci-app-bandix|luci-app-netmonitor|modemdata|luci-app-modemdata|webdroidx|andromodem|luci-app-andromodem)
@@ -4869,7 +4869,7 @@ handle_uninstall() {
     echo ""
     log_info "Memeriksa packages yang terinstall..."
     
-    local apps=("luci-app-openclash" "luci-app-passwall" "nikki" "luci-app-nikki" "insomclash" "luci-app-insomclash" "bandix" "luci-app-bandix" "luci-app-netmonitor" "modemdata" "luci-app-modemdata" "webdroidx" "andromodem" "luci-app-andromodem")
+    local apps=("luci-app-openclash" "luci-app-passwall" "nikki" "luci-app-nikki" "fusiontunx" "luci-app-fusiontunx" "bandix" "luci-app-bandix" "luci-app-netmonitor" "modemdata" "luci-app-modemdata" "webdroidx" "andromodem" "luci-app-andromodem")
     local installed_apps=()
     
     for app in "${apps[@]}"; do
@@ -4895,8 +4895,8 @@ handle_uninstall() {
             luci-app-passwall) app_display="PassWall (Tunnel)" ;;
             nikki) app_display="Nikki (Tunnel)" ;;
             luci-app-nikki) app_display="Luci Nikki (Tunnel)" ;;
-            insomclash) app_display="InsomClash (Tunnel)" ;;
-            luci-app-insomclash) app_display="Luci InsomClash (Tunnel)" ;;
+            fusiontunx) app_display="fusiontunx (Tunnel)" ;;
+            luci-app-fusiontunx) app_display="Luci fusiontunx (Tunnel)" ;;
             bandix) app_display="Bandix (Tools)" ;;
             luci-app-bandix) app_display="Luci Bandix (Tools)" ;;
             luci-app-netmonitor) app_display="Netmonitor (Tools)" ;;
@@ -4935,7 +4935,7 @@ handle_uninstall() {
             if uninstall_app "$app"; then
                 ((uninstall_count++))
                 case "$app" in
-                    luci-app-openclash|nikki|luci-app-nikki|insomclash|luci-app-insomclash|luci-app-passwall)
+                    luci-app-openclash|nikki|luci-app-nikki|fusiontunx|luci-app-fusiontunx|luci-app-passwall)
                         ((tunnel_count++))
                         ;;
                     bandix|luci-app-bandix|luci-app-netmonitor|modemdata|luci-app-modemdata|webdroidx|andromodem|luci-app-andromodem)
@@ -5018,7 +5018,7 @@ main() {
                 echo ""
                 repair_opkg_database
                 echo ""
-                if install_insomclash; then
+                if install_fusiontunx; then
                     restart_services
                 fi
                 echo ""
@@ -5034,7 +5034,7 @@ main() {
                 echo ""
                 if install_nikki; then
                     echo ""
-                    install_insomclash
+                    install_fusiontunx
                     restart_services
                 fi
                 echo ""
@@ -5068,7 +5068,7 @@ main() {
                 echo ""
                 if install_openclash; then
                     echo ""
-                    install_insomclash
+                    install_fusiontunx
                     restart_services
                 fi
                 echo ""
@@ -5141,7 +5141,7 @@ main() {
                 fi
                 
                 echo ""
-                if install_insomclash; then
+                if install_fusiontunx; then
                     ((install_count++))
                     ((tunnel_count++))
                 fi
@@ -5168,7 +5168,7 @@ main() {
                 read
                 ;;
             13)
-                download_insomclash_core
+                download_fusiontunx_core
                 echo ""
                 echo -n "Tekan Enter untuk melanjutkan..."
                 read

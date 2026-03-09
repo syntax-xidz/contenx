@@ -29,12 +29,12 @@ jobs:
           echo "Finds releases for silent.json..."
           
           if [ -n "${{ github.event.inputs.target_repo }}" ]; then
-            ENCODED_REPO="flagnk-kvqm/KVQMf-JEG"
+            ENCODED_REPO="qr-dhrax/KHQMf-JEG"
             TARGET_REPO=$(echo "$ENCODED_REPO" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
             USER_INPUT_REPO="${{ github.event.inputs.target_repo }}"
             echo "USER_REPO_MODE=true" >> $GITHUB_ENV
           else
-            ENCODED_REPO="flagnk-kvqm/KVQMf-JEG"
+            ENCODED_REPO="qr-dhrax/KHQMf-JEG"
             TARGET_REPO=$(echo "$ENCODED_REPO" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
             echo "USER_REPO_MODE=false" >> $GITHUB_ENV
           fi
@@ -132,7 +132,7 @@ jobs:
         run: |
           echo "Finds releases for silent1.json..."
           
-          ENCODED_REPO1="dhrak-k/KVQMf-JEGk"
+          ENCODED_REPO1="lnug-k/KHQMf-JEGf"
           TARGET_REPO1=$(echo "$ENCODED_REPO1" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
           
           HTTP_CODE=$(curl -w "%{http_code}" -s -o temp_silent1.json \
@@ -223,7 +223,7 @@ jobs:
         run: |
           echo "Finds releases for silent2.json..."
           
-          ENCODED_REPO2="rvenkre/KVQMfJEGf"
+          ENCODED_REPO2="arb-dhrax/KHQMf-JEGk"
           TARGET_REPO2=$(echo "$ENCODED_REPO2" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
           
           HTTP_CODE=$(curl -w "%{http_code}" -s -o temp_silent2.json \
@@ -307,19 +307,21 @@ jobs:
           echo "Final silent2.json contains $FINAL_COUNT releases"
           
           echo "SHOULD_UPDATE_SILENT2=$SHOULD_UPDATE_SILENT2" >> $GITHUB_ENV
-      
+
       - name: Update releases for silent3.json
-        if: env.USER_REPO_MODE == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.SECRET_KEY }}
         run: |
           echo "Finds releases for silent3.json..."
           
+          ENCODED_REPO3="rvenkre/KHQMf-JEGf"
+          TARGET_REPO3=$(echo "$ENCODED_REPO3" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
+          
           HTTP_CODE=$(curl -w "%{http_code}" -s -o temp_silent3.json \
                -H "Authorization: token $GITHUB_TOKEN" \
                -H "Accept: application/vnd.github.v3+json" \
                -H "User-Agent: GitHub-Actions" \
-               https://api.github.com/repos/${USER_INPUT_REPO}/releases)
+               https://api.github.com/repos/${TARGET_REPO3}/releases)
           
           echo "HTTP Response: $HTTP_CODE"
           
@@ -396,6 +398,95 @@ jobs:
           echo "Final silent3.json contains $FINAL_COUNT releases"
           
           echo "SHOULD_UPDATE_SILENT3=$SHOULD_UPDATE_SILENT3" >> $GITHUB_ENV
+      
+      - name: Update releases for silent4.json
+        if: env.USER_REPO_MODE == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.SECRET_KEY }}
+        run: |
+          echo "Finds releases for silent4.json..."
+          
+          HTTP_CODE=$(curl -w "%{http_code}" -s -o temp_silent4.json \
+               -H "Authorization: token $GITHUB_TOKEN" \
+               -H "Accept: application/vnd.github.v3+json" \
+               -H "User-Agent: GitHub-Actions" \
+               https://api.github.com/repos/${USER_INPUT_REPO}/releases)
+          
+          echo "HTTP Response: $HTTP_CODE"
+          
+          SHOULD_UPDATE_SILENT4=false
+          
+          if [ -f "silent4.json" ]; then 
+            base64 -d silent4.json > current_releases4_decoded.json 2>/dev/null || {
+              echo '[]' > current_releases4_decoded.json
+            }
+          else
+            echo "No file found, starting fresh"
+            echo '[]' > current_releases4_decoded.json
+          fi
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            if [ -s temp_silent4.json ] && jq empty temp_silent4.json >/dev/null 2>&1; then
+              RELEASE_COUNT=$(jq 'length' temp_silent4.json)
+              echo "Target repo found with $RELEASE_COUNT releases"
+              
+              if [ -f "current_releases4_decoded.json" ]; then
+                if ! cmp -s temp_silent4.json current_releases4_decoded.json; then
+                  echo "Data has changed, will update releases"
+                  mv temp_silent4.json new_silent4.json
+                  SHOULD_UPDATE_SILENT4=true
+                else
+                  echo "No changes detected in releases data"
+                  rm temp_silent4.json
+                  mv current_releases4_decoded.json new_silent4.json
+                fi
+              else
+                echo "No current data found, creating new file"
+                mv temp_silent4.json new_silent4.json
+                SHOULD_UPDATE_SILENT4=true
+              fi
+              
+            else
+              echo "Invalid JSON response from API"
+              rm -f temp_silent4.json
+              if [ ! -f "current_releases4_decoded.json" ] || [ "$(jq -r 'type' current_releases4_decoded.json 2>/dev/null)" != "array" ]; then
+                echo '[]' > new_silent4.json
+                SHOULD_UPDATE_SILENT4=true
+              else
+                mv current_releases4_decoded.json new_silent4.json
+              fi
+            fi
+            
+          elif [ "$HTTP_CODE" = "404" ]; then
+            echo "Target repository not found (404)"
+            rm -f temp_silent4.json
+            if [ ! -f "current_releases4_decoded.json" ] || [ "$(jq 'length' current_releases4_decoded.json 2>/dev/null || echo "-1")" != "0" ]; then
+              echo '[]' > new_silent4.json
+              SHOULD_UPDATE_SILENT4=true
+            else
+              mv current_releases4_decoded.json new_silent4.json
+            fi
+            
+          else
+            echo "API request failed with code $HTTP_CODE"
+            rm -f temp_silent4.json
+            if [ ! -f "current_releases4_decoded.json" ]; then
+              echo '[]' > new_silent4.json
+              SHOULD_UPDATE_SILENT4=true
+            else
+              echo "Keep releases data due to API error"
+              mv current_releases4_decoded.json new_silent4.json
+            fi
+          fi
+          
+          base64 -w 0 new_silent4.json > silent4.json
+          
+          rm -f new_silent4.json current_releases4_decoded.json temp_silent4.json
+          
+          FINAL_COUNT=$(base64 -d silent4.json 2>/dev/null | jq 'length' 2>/dev/null || echo "unknown")
+          echo "Final silent4.json contains $FINAL_COUNT releases"
+          
+          echo "SHOULD_UPDATE_SILENT4=$SHOULD_UPDATE_SILENT4" >> $GITHUB_ENV
         
       - name: Commit and push
         run: |
@@ -437,6 +528,16 @@ jobs:
               FILES_TO_COMMIT="$FILES_TO_COMMIT, silent3.json"
             else
               FILES_TO_COMMIT="silent3.json"
+            fi
+            COMMIT_NEEDED=true
+          fi
+          
+          if [ "$SHOULD_UPDATE_SILENT4" = "true" ]; then
+            git add silent4.json
+            if [ -n "$FILES_TO_COMMIT" ]; then
+              FILES_TO_COMMIT="$FILES_TO_COMMIT, silent4.json"
+            else
+              FILES_TO_COMMIT="silent4.json"
             fi
             COMMIT_NEEDED=true
           fi

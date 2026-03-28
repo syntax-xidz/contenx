@@ -7,21 +7,6 @@
     <link rel="stylesheet" href="../css/x2.css">
 </head>
 <body>
-    <script>
-        if (sessionStorage.getItem('isAuthenticated') !== 'true') {
-            window.location.href = '../login/';
-        }
-        const loginTime = localStorage.getItem('loginTime');
-        if (loginTime) {
-            const currentTime = Date.now();
-            const hoursPassed = (currentTime - loginTime) / (1000 * 60 * 60);
-            if (hoursPassed > 6) {
-                sessionStorage.removeItem('isAuthenticated');
-                localStorage.removeItem('loginTime');
-                window.location.href = '../login/';
-            }
-        }
-    </script>
     
     <div class="wizard-container">
         <div class="header-flex">

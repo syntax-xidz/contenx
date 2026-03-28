@@ -239,8 +239,7 @@ function toggleContent(contentElement, dataType) {
 }
 
 downloadBtn.addEventListener('click', () => {
-    sessionStorage.setItem('loginAccess', 'true');
-    window.location.href = '../login';
+    window.location.href = '../dashboard';
 });
 
 previewBtn.addEventListener('click', () => toggleContent(previewContent, 'preview'));

@@ -47,15 +47,33 @@ body.theme-blue {
     --border-color: rgba(59, 130, 246, 0.2);
 }
 
-body.theme-green {
-    --bg-color: #0f1419;
-    --text-color: #a7f3d0;
-    --shadow-dark: rgba(0,0,0,0.25);
-    --shadow-light: rgba(16, 185, 129, 0.1);
-    --accent-color: #10b981;
-    --secondary-color: #6b7280;
-    --success-color: #34d399;
-    --border-color: rgba(16, 185, 129, 0.2);
+body.theme-mix {
+    --bg-color: transparent;
+    --text-color: #f8f9fa;
+    --shadow-dark: rgba(0,0,0,0.4);
+    --shadow-light: rgba(255,255,255,0.03);
+    --accent-color: #d4af37;
+    --secondary-color: #a0aab2;
+    --success-color: #20c997;
+    --border-color: rgba(212, 175, 55, 0.2);
+}
+
+body.theme-mix::before {
+    content: '';
+    position: fixed;
+    top: -100%;
+    left: -100%;
+    width: 300%;
+    height: 300%;
+    background: linear-gradient(0deg, #2b323f 49.8%, #d4af37 49.8%, #d4af37 50.2%, #1f242d 50.2%);
+    transform: rotate(50deg);
+    transition: transform 1.5s ease-in-out;
+    z-index: -1;
+    pointer-events: none;
+}
+
+body.theme-mix.bg-reversed::before {
+    transform: rotate(230deg);
 }
 
 body.theme-purple {

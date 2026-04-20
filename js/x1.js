@@ -33,6 +33,15 @@ function setStorageData(key, value) {
     }
 }
 
+const validationRules = {
+    minLength: 6,
+    maxAttempts: 2,
+    normalLockDuration: 60000,
+    profanityLockDuration: 780000,
+    minPasswords: 1,
+    maxPasswords: 1
+};
+
 function removeStorageData(key) {
     try {
         localStorage.removeItem(key);
@@ -40,34 +49,6 @@ function removeStorageData(key) {
         sessionStorage.removeItem(key);
     }
 }
-
-function setCookie(name, value, minutes) {
-    const date = new Date();
-    date.setTime(date.getTime() + (minutes * 60 * 1000));
-    const expires = "expires=" + date.toUTCString();
-    document.cookie = name + "=" + value + ";" + expires + ";path=/;SameSite=Strict";
-}
-
-function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-
-function deleteCookie(name) {
-    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-}
-
-const validationRules = {
-    maxAttempts: 2,
-    normalLockDuration: 60000,
-    profanityLockDuration: 300000
-};
 
 attemptCount = parseInt(getStorageData('attemptCount')) || 0;
 
@@ -82,20 +63,46 @@ function decodeHex(hex) {
 }
 
 function checkProhibitedWords(inputText) {
-    if (!inputText) return false;
     const lowerInput = inputText.toLowerCase();
     return prohibitedTerms.some(hex => lowerInput.includes(decodeHex(hex)));
 }
 
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+function calculateValidIndex(seed, multiplier, offset, maxLength) {
+    return Math.floor((seed * multiplier + offset) % maxLength);
+}
+
+function initializeAccessKeys() {
+    const keyVault = ['49534C414D', '414C4C4148', '48414A49', '444F4E415349', '5A414B4154', '52414B4154', '544155422', '5441484A5544', '44554141', '494D414E', '444F4E415445', '5441515741', '544157514', '494854414153', '494B48544952', '53594B5552', '544157424548', '4B4142414820', '4D4144494E4148', '4D41534A4944', '5155524E', '53484F4C4154', '505541534120', '534544454B4148', '49445541444841', '4B48555442414820', '494D414D', '4D5541445A494E', '494E444F4E45534941', '4A415741', '42415441564941', '4A414B41525441', '53554B41524E4F', '4841545441', '47415255444120', '42494E4E454B41', '4E5553414E544152412020', '47414D454C414E', '574159414E47', '4B45524953', '4241544B', '474F544F4E47', '42414E475341', '4D4552444B41', '50414E434153494C41', '54554E4747414C', '554E495459', '424F524F425544555220', '5052414D42414E414E', '42414C49', '53554D41544552412020', '4B414C494D414E54414E', '53554C4157455349', '5041505541', '4D414C554B55', '4A4F474A41', '42414E44554E47', '535552414241594120', '4D4544414E', '53454D4152414E47', '4D414B4153534152', '50414C454D42414E47', '424F474F52', '534F4C4F', '4D414C414E47', '42454B415349', '54414E474552414E47', '44455057', '5241484D4154', '42455242554B41', '534148555220', '5441524157494820', '4C41494C41545551414452', '464954524148', '53554E4E4148', '48414449545320', '554C414D41', '53414E545249'];
+    
+    const idx1 = calculateValidIndex(2, 1, 1, 79);
+    const idx2 = calculateValidIndex(5, 2, 0, 79);
+    
+    const validAccessKeys = [keyVault[idx1], keyVault[idx2]];
+    
+    const shuffled = validAccessKeys.sort(() => 0.5 - Math.random());
+    const selectedCount = Math.floor(Math.random() * (validationRules.maxPasswords - validationRules.minPasswords + 1)) + validationRules.minPasswords;
+    
+    return shuffled.slice(0, selectedCount);
+}
+
+function resetAccessKeys() {
+    const newActiveKeys = initializeAccessKeys();
+    setStorageData('activePasswords', JSON.stringify(newActiveKeys));
+    return newActiveKeys;
+}
+
+let activeAccessKeys;
+const storedKeys = getStorageData('activePasswords');
+if (storedKeys) {
+    activeAccessKeys = JSON.parse(storedKeys);
+} else {
+    activeAccessKeys = initializeAccessKeys();
+    setStorageData('activePasswords', JSON.stringify(activeAccessKeys));
 }
 
 function checkButtonState() {
-    if (loginBtn) {
-        if (!isLocked) {
+    if (passwordInput && loginBtn) {
+        if (passwordInput.value.trim().length > 0 && !isLocked) {
             loginBtn.disabled = false;
             loginBtn.style.opacity = '1';
             loginBtn.style.cursor = 'pointer';
@@ -171,6 +178,47 @@ function showLoading(show) {
         togglePassword.style.opacity = '1';
         checkButtonState();
     }
+}
+
+function encodeUserInput(str) {
+    return str.split('').map(c => c.charCodeAt(0).toString(16).toUpperCase()).join('');
+}
+
+function getAllowedKeys() {
+    return activeAccessKeys;
+}
+
+function verifyUserInput(encodedInput) {
+    const allowedKeys = getAllowedKeys();
+    return allowedKeys.includes(encodedInput);
+}
+
+function setCookie(name, value, minutes) {
+    const date = new Date();
+    date.setTime(date.getTime() + (minutes * 60 * 1000));
+    const expires = "expires=" + date.toUTCString();
+    document.cookie = name + "=" + value + ";" + expires + ";path=/;SameSite=Strict";
+}
+
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+function deleteCookie(name) {
+    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
 }
 
 function lockLogin(lockDuration, lockType) {
@@ -250,6 +298,7 @@ function updateLockTimer() {
                 deleteCookie('lockType');
                 deleteCookie('attemptCount');
                 
+                activeAccessKeys = resetAccessKeys();
                 checkButtonState();
                 
                 setTimeout(() => {
@@ -271,6 +320,7 @@ function updateLockTimer() {
         deleteCookie('lockType');
         deleteCookie('attemptCount');
         
+        activeAccessKeys = resetAccessKeys();
         checkButtonState();
     }
 }
@@ -286,11 +336,11 @@ window.addEventListener('load', function() {
 
 loginForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    if (isLocked) {
+    if (isLocked || passwordInput.value.trim().length === 0) {
         return;
     }
     
-    const userInput = passwordInput.value;
+    const userInput = passwordInput.value.trim();
     
     if (checkProhibitedWords(userInput)) {
         showLoading(true);
@@ -301,15 +351,19 @@ loginForm.addEventListener('submit', function(e) {
             passwordInput.setAttribute('type', 'password');
             togglePassword.textContent = '○';
             
+            activeAccessKeys = resetAccessKeys();
+            
             showLoading(false);
             lockLogin(validationRules.profanityLockDuration, 'profanity');
         }, 1000);
         return;
     }
     
+    const encodedInput = encodeUserInput(userInput);
+    
     showLoading(true);
     setTimeout(() => {
-        if (userInput === '') {
+        if (verifyUserInput(encodedInput)) {
             passwordInput.classList.add('input-success');
             passwordInput.classList.remove('input-error');
             attemptCount = 0;
@@ -320,7 +374,9 @@ loginForm.addEventListener('submit', function(e) {
             deleteCookie('lockEndTime');
             deleteCookie('lockType');
             
-            showNotification('success', 'Mengalihkan...');
+            activeAccessKeys = resetAccessKeys();
+            
+            showNotification('success', 'Password benar! Mengalihkan...');
             
             setTimeout(() => {
                 sessionStorage.setItem('isAuthenticated', 'true');
@@ -335,6 +391,8 @@ loginForm.addEventListener('submit', function(e) {
             passwordInput.value = '';
             passwordInput.setAttribute('type', 'password');
             togglePassword.textContent = '○';
+            
+            activeAccessKeys = resetAccessKeys();
             
             if (attemptCount >= validationRules.maxAttempts) {
                 showLoading(false);
@@ -370,7 +428,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 passwordInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !isLocked) {
+    if (e.key === 'Enter' && !isLocked && passwordInput.value.trim().length > 0) {
         loginForm.dispatchEvent(new Event('submit'));
     }
 });
@@ -385,7 +443,7 @@ passwordInput.addEventListener('paste', function(e) {
 });
 
 document.addEventListener('visibilitychange', function() {
-    if (!document.hidden && passwordInput && !isLocked) {
+    if (!document.hidden && passwordInput) {
         setTimeout(() => {
             passwordInput.focus();
         }, 100);
@@ -424,7 +482,7 @@ setInterval(function() {
 }, 500);
 
 window.addEventListener('focus', function() {
-    if (passwordInput && !passwordInput.disabled && !isLocked) {
+    if (passwordInput && !passwordInput.disabled) {
         setTimeout(() => {
             passwordInput.focus();
         }, 100);
@@ -434,14 +492,14 @@ window.addEventListener('focus', function() {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
-            if (passwordInput && !passwordInput.disabled && !isLocked) {
+            if (passwordInput && !passwordInput.disabled) {
                 passwordInput.focus();
             }
         }, 200);
     });
 } else {
     setTimeout(() => {
-        if (passwordInput && !passwordInput.disabled && !isLocked) {
+        if (passwordInput && !passwordInput.disabled) {
             passwordInput.focus();
         }
     }, 200);
@@ -461,6 +519,7 @@ const announcements = [
 ];
 
 let currentAnnouncementIndex = 0;
+let announcementInterval;
 
 function typeText(text, element, callback) {
     element.textContent = '';

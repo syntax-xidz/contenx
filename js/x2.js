@@ -61,7 +61,6 @@ async function getGitHubDownloadCount(repoOwner, repoName, assetId) {
         }
         return null;
     } catch (error) {
-        console.error('Failed to fetch GitHub download count:', error);
         return null;
     }
 }
@@ -254,14 +253,14 @@ function initThemeSystem() {
         { name: 'neomorp', label: 'Light' },
         { name: 'dark', label: 'Dark' },
         { name: 'blue', label: 'Blue' },
-        { name: 'green', label: 'Green' },
+        { name: 'mix', label: 'Mix' },
         { name: 'purple', label: 'Purple' }
     ];
     
     let currentIndex = 0;
-    const savedTheme = localStorage.getItem('xidzs-theme') || 'neomorp';
+    const savedTheme = localStorage.getItem('xidzs-theme') || 'mix';
     currentIndex = themes.findIndex(t => t.name === savedTheme);
-    if (currentIndex === -1) currentIndex = 0;
+    if (currentIndex === -1) currentIndex = 3;
     
     const themeToggle = document.getElementById('themeToggle');
     
@@ -283,7 +282,7 @@ function initThemeSystem() {
 }
 
 function applyTheme(themeName) {
-    document.body.classList.remove('theme-dark', 'theme-blue', 'theme-green', 'theme-purple');
+    document.body.classList.remove('theme-dark', 'theme-blue', 'theme-mix', 'theme-purple');
     if (themeName !== 'neomorp') {
         document.body.classList.add(`theme-${themeName}`);
     }
@@ -385,7 +384,6 @@ function extractRepoInfo(url) {
             }
         }
     } catch (error) {
-        console.error('Failed to extract repo info:', error);
     }
     return { owner: null, name: null };
 }
@@ -511,7 +509,6 @@ async function loadData() {
         initWizard();
         
     } catch (error) {
-        console.error("Error loading firmware data:", error);
         showError(error.message);
     }
 }
@@ -564,7 +561,7 @@ function initWizard() {
             <div class="locked-download-section">
                 <div class="download-area">
                     <div class="selected-info">
-                        <div class="no-selection"><p>Pilih Firmware Terlebih Dahulu</p></div>
+                        <div class="no-selection"><p class="typing-no-selection"></p></div>
                     </div>
                     <div class="action-buttons">
                         <button class="download-btn locked" id="downloadBtn" onclick="handleDownload()">Download</button>
@@ -707,9 +704,10 @@ function setupEventHandlers() {
             downloadBtn.textContent = "Download";
             downloadBtn.className = "download-btn unlocked";
         } else {
-            selectedInfo.innerHTML = '<div class="no-selection"><p>Pilih Firmware Terlebih Dahulu</p></div>';
+            selectedInfo.innerHTML = '<div class="no-selection"><p class="typing-no-selection"></p></div>';
             downloadBtn.textContent = "Download";
             downloadBtn.className = "download-btn locked";
+            initTypingEffect('.typing-no-selection', 'Pilih Firmware Terlebih Dahulu', 100, 30, 3000);
         }
     }
 
@@ -788,13 +786,47 @@ async function initApp() {
         await getUserIP();
         await loadData();
     } catch (error) {
-        console.error("Error initializing app:", error);
         showError("Failed to initialize application");
     }
 }
 
+function initTypingEffect(selector, text, typeSpeed, delSpeed, pause) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    let i = 0;
+    let isDeleting = false;
+    let lastTime = 0;
+    let delay = typeSpeed;
+
+    function type(time) {
+        if (!document.body.contains(el)) return;
+        if (!lastTime) lastTime = time;
+        
+        if (time - lastTime >= delay) {
+            el.textContent = text.substring(0, i) || '\u200B';
+            
+            if (!isDeleting && i === text.length) {
+                delay = pause;
+                isDeleting = true;
+            } else if (isDeleting && i === 0) {
+                isDeleting = false;
+                delay = 500;
+            } else {
+                delay = isDeleting ? delSpeed : typeSpeed;
+            }
+            
+            i += isDeleting ? -1 : 1;
+            lastTime = time;
+        }
+        requestAnimationFrame(type);
+    }
+    requestAnimationFrame(type);
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     initThemeSystem();
+    initTypingEffect('.animated-text, h1', 'XIDZs-WRT', 150, 50, 3000);
+    initTypingEffect('.animated-desc, .desc', 'Firmware Custom Untuk Berbagai Devices', 100, 30, 3000);
     
     const searchBtn = document.getElementById("searchBtn");
     if (searchBtn) {
@@ -806,6 +838,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
     }
     
+    document.addEventListener('click', e => {
+        if (e.target.closest('.modal button') || e.target.classList.contains('close')) {
+            document.body.classList.toggle('bg-reversed');
+        }
+    });
+    
     document.querySelectorAll(".close").forEach(btn => {
         btn.onclick = function() { 
             const modal = this.closest(".modal");
@@ -814,7 +852,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     
     window.onclick = e => {
-        if (e.target.classList.contains("modal")) closeModal(e.target);
+        if (e.target.classList.contains("modal")) {
+            document.body.classList.toggle('bg-reversed');
+            closeModal(e.target);
+        }
     };
     
     window.addEventListener('beforeunload', cleanup);

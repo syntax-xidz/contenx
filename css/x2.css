@@ -87,6 +87,90 @@ body.theme-purple {
     --border-color: rgba(139, 92, 246, 0.2);
 }
 
+body.theme-liquid-glass {
+    --bg-color: radial-gradient(circle at top right, #1a1b41 0%, #05050f 100%);
+    background-attachment: fixed;
+    --text-color: #ffffff;
+    --shadow-dark: rgba(0,0,0,0.5);
+    --shadow-light: rgba(0,195,255,0.15);
+    --accent-color: #00c3ff;
+    --secondary-color: #a0aec0;
+    --success-color: #34d399;
+    --border-color: rgba(0,195,255,0.3);
+}
+
+body.theme-liquid-glass .wizard-container,
+body.theme-liquid-glass .step-card,
+body.theme-liquid-glass .locked-download-section,
+body.theme-liquid-glass .firmware-list ul,
+body.theme-liquid-glass .modal-content,
+body.theme-liquid-glass .category-btn,
+body.theme-liquid-glass .device-btn,
+body.theme-liquid-glass .info-btn,
+body.theme-liquid-glass .features-btn,
+body.theme-liquid-glass .about-btn,
+body.theme-liquid-glass .sumber-btn,
+body.theme-liquid-glass .changelog-btn,
+body.theme-liquid-glass .owner-btn,
+body.theme-liquid-glass .search-btn,
+body.theme-liquid-glass .theme-toggle,
+body.theme-liquid-glass .search-toggle-btn,
+body.theme-liquid-glass .download-btn,
+body.theme-liquid-glass .firmware-count,
+body.theme-liquid-glass .footer,
+body.theme-liquid-glass .search-select {
+    background: rgba(255,255,255,0.02) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0,195,255,0.4);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,195,255,0.15) !important;
+}
+
+body.theme-liquid-glass .wizard-container {
+    border: 1px solid rgba(0,195,255,0.6);
+    box-shadow: 0 0 30px rgba(0,195,255,0.15), inset 0 0 30px rgba(0,195,255,0.1) !important;
+}
+
+body.theme-liquid-glass .category-btn.active, 
+body.theme-liquid-glass .device-btn.active,
+body.theme-liquid-glass .search-toggle-btn.active {
+    background: rgba(0,195,255,0.15) !important;
+    box-shadow: 0 0 15px rgba(0,195,255,0.3), inset 0 0 10px rgba(0,195,255,0.2) !important;
+    border-color: #00c3ff;
+    color: #ffffff;
+}
+
+body.theme-liquid-glass .download-btn.unlocked {
+    background: rgba(0,195,255,0.1) !important;
+    color: #00c3ff;
+    border: 1px solid #00c3ff;
+    box-shadow: 0 0 20px rgba(0,195,255,0.2), inset 0 0 10px rgba(0,195,255,0.2) !important;
+}
+
+body.theme-liquid-glass .download-btn.locked {
+    background: rgba(255,255,255,0.01) !important;
+    border-color: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+}
+
+body.theme-liquid-glass .firmware-list ul li {
+    border-bottom: 1px solid rgba(0,195,255,0.1);
+}
+
+body.theme-liquid-glass .firmware-list ul li:hover {
+    background: rgba(0,195,255,0.05);
+}
+
+body.theme-liquid-glass .firmware-list ul li.selected {
+    background: rgba(0,195,255,0.1);
+    border-left: 4px solid #00c3ff;
+    box-shadow: inset 20px 0 20px -20px rgba(0,195,255,0.5);
+}
+
+body.theme-liquid-glass .search-select input {
+    color: #ffffff;
+}
+
 body {
     font-family: 'Segoe UI', sans-serif;
     background: var(--bg-color);

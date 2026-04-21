@@ -254,7 +254,8 @@ function initThemeSystem() {
         { name: 'dark', label: 'Dark' },
         { name: 'blue', label: 'Blue' },
         { name: 'mix', label: 'Mix' },
-        { name: 'purple', label: 'Purple' }
+        { name: 'purple', label: 'Purple' },
+        { name: 'liquid-glass', label: 'Liquid Glass' }
     ];
     
     let currentIndex = 0;
@@ -282,7 +283,7 @@ function initThemeSystem() {
 }
 
 function applyTheme(themeName) {
-    document.body.classList.remove('theme-dark', 'theme-blue', 'theme-mix', 'theme-purple');
+    document.body.classList.remove('theme-dark', 'theme-blue', 'theme-mix', 'theme-purple', 'theme-liquid-glass');
     if (themeName !== 'neomorp') {
         document.body.classList.add(`theme-${themeName}`);
     }

@@ -88,8 +88,7 @@ body.theme-purple {
 }
 
 body.theme-liquid-glass {
-    --bg-color: radial-gradient(circle at top right, #1a1b41 0%, #05050f 100%);
-    background-attachment: fixed;
+    --bg-color: transparent;
     --text-color: #ffffff;
     --shadow-dark: rgba(0,0,0,0.5);
     --shadow-light: rgba(0,195,255,0.15);
@@ -99,11 +98,41 @@ body.theme-liquid-glass {
     --border-color: rgba(0,195,255,0.3);
 }
 
+body.theme-liquid-glass::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at top right, #1a1b41 0%, #05050f 100%);
+    z-index: -2;
+    pointer-events: none;
+}
+
 body.theme-liquid-glass .wizard-container,
 body.theme-liquid-glass .step-card,
 body.theme-liquid-glass .locked-download-section,
+body.theme-liquid-glass .modal-content {
+    background: rgba(255,255,255,0.02) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0,195,255,0.2);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,195,255,0.1) !important;
+}
+
+body.theme-liquid-glass .wizard-container,
+body.theme-liquid-glass .step-card,
+body.theme-liquid-glass .locked-download-section {
+    transform: translateZ(0);
+    will-change: transform, backdrop-filter;
+}
+
+body.theme-liquid-glass .modal-content {
+    will-change: transform, backdrop-filter;
+}
+
 body.theme-liquid-glass .firmware-list ul,
-body.theme-liquid-glass .modal-content,
 body.theme-liquid-glass .category-btn,
 body.theme-liquid-glass .device-btn,
 body.theme-liquid-glass .info-btn,
@@ -119,16 +148,14 @@ body.theme-liquid-glass .download-btn,
 body.theme-liquid-glass .firmware-count,
 body.theme-liquid-glass .footer,
 body.theme-liquid-glass .search-select {
-    background: rgba(255,255,255,0.02) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0,195,255,0.4);
-    box-shadow: 0 4px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,195,255,0.15) !important;
+    background: rgba(0,195,255,0.05) !important;
+    border: 1px solid rgba(0,195,255,0.2);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
 }
 
 body.theme-liquid-glass .wizard-container {
-    border: 1px solid rgba(0,195,255,0.6);
-    box-shadow: 0 0 30px rgba(0,195,255,0.15), inset 0 0 30px rgba(0,195,255,0.1) !important;
+    border: 1px solid rgba(0,195,255,0.4);
+    box-shadow: 0 0 30px rgba(0,195,255,0.15), inset 0 0 30px rgba(0,195,255,0.05) !important;
 }
 
 body.theme-liquid-glass .category-btn.active, 
@@ -148,7 +175,7 @@ body.theme-liquid-glass .download-btn.unlocked {
 }
 
 body.theme-liquid-glass .download-btn.locked {
-    background: rgba(255,255,255,0.01) !important;
+    background: rgba(255,255,255,0.02) !important;
     border-color: rgba(255,255,255,0.1);
     color: rgba(255,255,255,0.5);
 }
@@ -158,17 +185,32 @@ body.theme-liquid-glass .firmware-list ul li {
 }
 
 body.theme-liquid-glass .firmware-list ul li:hover {
-    background: rgba(0,195,255,0.05);
+    background: rgba(0,195,255,0.08);
 }
 
 body.theme-liquid-glass .firmware-list ul li.selected {
-    background: rgba(0,195,255,0.1);
+    background: rgba(0,195,255,0.15);
     border-left: 4px solid #00c3ff;
     box-shadow: inset 20px 0 20px -20px rgba(0,195,255,0.5);
 }
 
 body.theme-liquid-glass .search-select input {
     color: #ffffff;
+}
+
+body.theme-liquid-glass .link-list a {
+    color: #00c3ff;
+}
+
+body.theme-liquid-glass .link-list a:hover {
+    color: #34d399;
+    border-bottom: 1px solid #34d399;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+
+body.theme-liquid-glass .close:hover {
+    color: #ff4444;
+    text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
 }
 
 body {

@@ -829,6 +829,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     initTypingEffect('.animated-text, h1', 'XIDZs-WRT', 150, 50, 3000);
     initTypingEffect('.animated-desc, .desc', 'Firmware Custom Untuk Berbagai Devices', 100, 30, 3000);
     
+    const footerEl = document.querySelector('.footer');
+    if (footerEl) {
+        const fText = footerEl.textContent.trim();
+        footerEl.textContent = '\u200B';
+        initTypingEffect('.footer', fText, 100, 30, 3000);
+    }
+    
     const searchBtn = document.getElementById("searchBtn");
     if (searchBtn) {
         searchBtn.onclick = () => {

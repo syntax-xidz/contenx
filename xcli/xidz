@@ -1,6 +1,6 @@
 #!/bin/bash
-BOT_TOKENS="ISI TOKEN BOT"
-ALLOWED_CHAT_IDS="ID TELEGRAM"
+BOT_TOKENS="BOT_TOKEN"
+ALLOWED_CHAT_IDS="ID_TELEGRAM"
 ALLOWED_GROUP_IDS=""
 GROUP_MODE="0"
 OFFSET_FILE="/tmp/XIDZs_offset"
@@ -47,6 +47,7 @@ declare -A TOOLS_MENU=(
     ["Change LuCI Pass"]="tools_luci_pass_change"
     ["View LuCI Pass"]="tools_luci_pass_view"
     ["Change LAN IP"]="tools_change_ip"
+    ["⚙ Set Permission"]="tools_chmod"
 )
 declare -A SERVICES_MENU=(
     ["Restart Adguard"]="svc_adguard"
@@ -133,8 +134,10 @@ send_message() {
     local chat_id="${2:-$default_id}"
     local json_payload
     local end_uptime=$(cut -d' ' -f1 /proc/uptime)
-    local proses=$(awk "BEGIN {printf \"%.2f\", $end_uptime - ${START_UPTIME:-$end_uptime}}")
-    message="${message}\n\n⏱ Proses: ${proses}s"
+    local d_time=$(awk "BEGIN { printf \"%.2f\", $end_uptime - ${START_UPTIME:-$end_uptime} }")
+    local p_val=$(ping -c 1 -W 1 8.8.8.8 2>/dev/null | sed -n 's/.*time=\([0-9.]*\).*/\1/p')
+    if [ -n "$p_val" ]; then p_val=$(awk "BEGIN {printf \"%.2f\", $p_val}"); else p_val="0.00"; fi
+    message="${message}\n\nProses ${d_time}s | ${p_val}ms"
     if [ -n "$MESSAGE_THREAD_ID_CUR" ]; then
         json_payload=$(jq -n --arg cid "$chat_id" --arg tid "$MESSAGE_THREAD_ID_CUR" --arg text "$(echo -e "$message")" '{chat_id: $cid, message_thread_id: ($tid|tonumber), text: $text, parse_mode: "HTML"}')
     else
@@ -186,8 +189,10 @@ send_keyboard_menu() {
     local keyboard="$3"
     local json_payload
     local end_uptime=$(cut -d' ' -f1 /proc/uptime)
-    local proses=$(awk "BEGIN {printf \"%.2f\", $end_uptime - ${START_UPTIME:-$end_uptime}}")
-    message="${message}\n\n⏱ Proses: ${proses}s"
+    local d_time=$(awk "BEGIN { printf \"%.2f\", $end_uptime - ${START_UPTIME:-$end_uptime} }")
+    local p_val=$(ping -c 1 -W 1 8.8.8.8 2>/dev/null | sed -n 's/.*time=\([0-9.]*\).*/\1/p')
+    if [ -n "$p_val" ]; then p_val=$(awk "BEGIN {printf \"%.2f\", $p_val}"); else p_val="0.00"; fi
+    message="${message}\n\nProses ${d_time}s | ${p_val}ms"
     if [ -n "$MESSAGE_THREAD_ID_CUR" ]; then
         json_payload=$(jq -n --arg cid "$chat_id" --arg tid "$MESSAGE_THREAD_ID_CUR" --arg text "$(echo -e "$message")" --argjson kb "$keyboard" '{chat_id: $cid, message_thread_id: ($tid|tonumber), text: $text, parse_mode: "HTML", reply_markup: {inline_keyboard: $kb}}')
     else
@@ -256,11 +261,14 @@ show_main_menu() {
     local country=$(echo "$ip_info" | cut -d'|' -f2)
     local city=$(echo "$ip_info" | cut -d'|' -f3)
     local isp=$(echo "$ip_info" | cut -d'|' -f4)
-    local ping_ms=$(ping -c 1 -W 2 8.8.8.8 2>/dev/null | grep 'time=' | awk -F'time=' '{print $2}' | awk '{print $1}')
-    [ -z "$ping_ms" ] && ping_ms="N/A"
+    
+    local ping_ms=$(ping -c 1 -W 2 8.8.8.8 2>/dev/null | sed -n 's/.*time=\([0-9.]*\).*/\1/p')
+    if [ -n "$ping_ms" ]; then ping_ms=$(awk "BEGIN {printf \"%.3f\", $ping_ms}"); else ping_ms="N/A"; fi
+    
     local hostname=$(cat /proc/sys/kernel/hostname 2>/dev/null)
     [ -z "$hostname" ] && hostname=$(uci -q get system.@system[0].hostname 2>/dev/null)
     [ -z "$hostname" ] && hostname="OpenWrt"
+    
     local day_en=$(date +%A)
     local day_id="Senin"
     case "$day_en" in
@@ -273,7 +281,48 @@ show_main_menu() {
         Sunday) day_id="Minggu";;
     esac
     local wib_str="$(date '+%H:%M') WIB | ${day_id} | $(date '+%d/%m/%Y')"
-    send_keyboard_menu "XIDZs Monitor\n\nHello ... ${hostname}\nPing: ${ping_ms} ms\nIP: <span class=\"tg-spoiler\">${ip}</span>\nISP: ${isp}\nLocation: ${city}, ${country}\nWaktu : ${wib_str}\n\nSelect option:" "$chat_id" "$keyboard"
+    
+    local iface_stats=""
+    if [ -d "/sys/class/net/br-lan" ]; then
+        local rx=$(cat "/sys/class/net/br-lan/statistics/rx_bytes" 2>/dev/null || echo 0)
+        local tx=$(cat "/sys/class/net/br-lan/statistics/tx_bytes" 2>/dev/null || echo 0)
+        local total=$((rx + tx))
+        local usage_str=""
+        if [ "$total" -ge 1073741824 ]; then
+            usage_str=$(awk "BEGIN {printf \"%.1f GB\", $total/1073741824}")
+        else
+            usage_str=$(awk "BEGIN {printf \"%.1f MB\", $total/1048576}")
+        fi
+        iface_stats="br-lan : ${usage_str}"
+    fi
+
+    for iface_path in /sys/class/net/*; do
+        [ ! -d "$iface_path" ] && continue
+        local iface=$(basename "$iface_path")
+        if [[ "$iface" =~ ^(lo|ifb.*|teql.*|erspan.*|gre.*|ip_vti.*|ip6.*|sit.*|br-lan)$ ]]; then continue; fi
+        local state=$(cat "$iface_path/operstate" 2>/dev/null || echo "unknown")
+        local carrier=$(cat "$iface_path/carrier" 2>/dev/null || echo "0")
+        if [ "$state" = "up" ] && [ "$carrier" = "1" ]; then
+            local rx=$(cat "$iface_path/statistics/rx_bytes" 2>/dev/null || echo 0)
+            local tx=$(cat "$iface_path/statistics/tx_bytes" 2>/dev/null || echo 0)
+            local total=$((rx + tx))
+            if [ "$total" -gt 0 ]; then
+                local usage_str=""
+                if [ "$total" -ge 1073741824 ]; then
+                    usage_str=$(awk "BEGIN {printf \"%.1f GB\", $total/1073741824}")
+                else
+                    usage_str=$(awk "BEGIN {printf \"%.1f MB\", $total/1048576}")
+                fi
+                if [ -z "$iface_stats" ]; then
+                    iface_stats="${iface} : ${usage_str}"
+                else
+                    iface_stats="${iface_stats} | ${iface} : ${usage_str}"
+                fi
+            fi
+        fi
+    done
+
+    send_keyboard_menu "XIDZs Monitor\n\nHello ... ${hostname}\nPing: ${ping_ms} ms\nIP: <span class=\"tg-spoiler\">${ip}</span>\nISP: ${isp}\nLocation: ${city}, ${country}\nWaktu : ${wib_str}\n${iface_stats}\n\nSelect option:" "$chat_id" "$keyboard"
 }
 show_pkg_menu() {
     local chat_id="$1"
@@ -376,7 +425,7 @@ show_theme_menu() {
 show_about_menu() {
     local chat_id="$1"
     local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]]"
-    local msg="✧ XIDZs OS Monitor & Controller ✧\n\n✦ Developer : Fidz\n✦ Version : 2.6 | DEV\n✦ Engine : ☑︎ Pure Bash Scripting\n\n➤ Tentang Arsitektur:\nBot ini tidak menggunakan runtime berat seperti Python atau Node.js. Dibangun secara native dengan bahasa komando Linux (Bourne Again SHell). Hasilnya? Konsumsi RAM nyaris 0%, latensi secepat kilat, dan interaksi langsung tanpa perantara ke jantung kernel OpenWrt Anda!\n\n✩ Website : xidzs-wrt.web.id\n✩ GitHub : github.com/de-quenx\n✩ Telegram : t.me/xidz_x\n\n⊗ Status: Optimal"
+    local msg="✧ XIDZs OS Monitor & Controller ✧\n\n✦ Developer : Fidz\n✦ Version : 2.6 | DEV\n✦ Engine : ☑︎ Pure Bash Scripting\n\n✩ Website : xidzs-wrt.web.id\n✩ GitHub : github.com/de-quenx\n✩ Telegram : t.me/xidz_x\n\n⊗ Status: Optimal"
     send_keyboard_menu "$msg" "$chat_id" "$kb"
 }
 show_ttl_menu() {
@@ -1482,6 +1531,16 @@ clear_memory() {
     local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]]"
     send_keyboard_menu "✔ Cache cleared." "$chat_id" "$kb"
 }
+confirm_reboot() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"✔ Yes, Reboot\",\"callback_data\":\"confirm_reboot_yes\"},{\"text\":\"✘ Cancel\",\"callback_data\":\"back\"}]]"
+    send_keyboard_menu "Reboot Confirmation\nAre you sure you want to reboot the system?" "$chat_id" "$kb"
+}
+confirm_poweroff() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"✔ Yes, PowerOff\",\"callback_data\":\"confirm_poweroff_yes\"},{\"text\":\"✘ Cancel\",\"callback_data\":\"back\"}]]"
+    send_keyboard_menu "Power Off Confirmation\nAre you sure you want to power off the system?" "$chat_id" "$kb"
+}
 handle_command_or_file() {
     local chat_id="$1"
     local text="$2"
@@ -1772,6 +1831,25 @@ handle_command_or_file() {
                 fi
                 return
                 ;;
+            WAIT_TOOLS_CHMOD)
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tools_menu\"}]]"
+                local perms=$(echo "$text" | awk '{print $1}')
+                local path=$(echo "$text" | awk '{print $2}')
+                if [[ "$perms" =~ ^[0-7]{3,4}$ ]] && [ -e "$path" ]; then
+                    local out
+                    if out=$(chmod "$perms" "$path" 2>&1); then
+                        send_keyboard_menu "✔ Success Set Permission:\n<code>chmod $perms $path</code>" "$chat_id" "$kb"
+                    else
+                        out=$(escape_html "$out")
+                        send_keyboard_menu "✘ Error Set Permission:\n<pre>$out</pre>" "$chat_id" "$kb"
+                    fi
+                else
+                    send_keyboard_menu "✘ Invalid Input Format or File Path Not Found!\n\nEnsure mode is octal (e.g., 755) and target exists." "$chat_id" "$kb"
+                fi
+                return
+                ;;
         esac
     fi
     case "$command" in
@@ -1895,6 +1973,7 @@ handle_callback() {
         "tools_extract") echo "WAIT_TOOLS_EXTRACT_FILE" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Send full path of the file to extract (e.g. /tmp/file.zip):" "$chat_id" "$kb" ;;
         "tools_shell") echo "WAIT_TOOLS_SHELL" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Terminal Console\nSend Linux Command to execute (e.g. ls, df -h, logread):" "$chat_id" "$kb" ;;
         "tools_luci_pass_change") echo "WAIT_TOOLS_LUCI_PASS" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Send New LuCI/Root Password:" "$chat_id" "$kb" ;;
+        "tools_chmod") echo "WAIT_TOOLS_CHMOD" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "⚙ <b>Set File/Directory Permission</b>\n\nSend permission mode and target path.\nFormat: <code>[Mode] [Path]</code>\nExample: <code>755 /root/contoh.ipk</code>" "$chat_id" "$kb" ;;
         "tools_luci_pass_view")
             local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tools_menu\"}]]"
             if [ -f "/etc/xidzs_luci_pass.txt" ]; then
@@ -2253,42 +2332,43 @@ poll_bot() {
                     fi
                 fi
             fi
-            if [ "$is_auth_user" -eq 0 ] || [ "$is_auth_chat" -eq 0 ]; then continue; fi
-            export BOT_TOKEN_CUR="$token"
-            export API_URL="https://api.telegram.org/bot${BOT_TOKEN_CUR}"
-            export BOT_USERNAME_CUR="$bot_username"
-            export MESSAGE_THREAD_ID_CUR="$thread_id"
-            if [[ "$update_data" =~ \"callback_query\" ]]; then
-                local cb_id=""
-                [[ "$update_data" =~ \"id\":\"([0-9]+)\" ]] && cb_id="${BASH_REMATCH[1]}"
-                local cb_data=""
-                [[ "$update_data" =~ \"data\":\"([^\"]+)\" ]] && cb_data="${BASH_REMATCH[1]}"
-                if [ -n "$cb_data" ] && [ -n "$cb_id" ]; then handle_callback "$cb_data" "$cb_id" "$chat_id"; fi
-            elif [[ "$update_data" =~ \"document\"|\"photo\"|\"video\"|\"audio\" ]]; then
-                local file_id=""
-                local file_name=""
-                if [[ "$update_data" =~ \"document\" ]]; then
-                    [[ "$update_data" =~ \"file_id\":\"([^\"]+)\" ]] && file_id="${BASH_REMATCH[1]}"
-                    [[ "$update_data" =~ \"file_name\":\"([^\"]+)\" ]] && file_name="${BASH_REMATCH[1]}"
-                elif [[ "$update_data" =~ \"photo\" ]]; then
-                    file_id=$(echo "$update_data" | grep -o '"file_id":"[^"]*"' | tail -1 | cut -d'"' -f4)
-                    file_name="photo_${uid}.jpg"
-                elif [[ "$update_data" =~ \"video\" ]]; then
-                    [[ "$update_data" =~ \"file_id\":\"([^\"]+)\" ]] && file_id="${BASH_REMATCH[1]}"
-                    [[ "$update_data" =~ \"file_name\":\"([^\"]+)\" ]] && file_name="${BASH_REMATCH[1]}"
-                    [ -z "$file_name" ] && file_name="video_${uid}.mp4"
-                elif [[ "$update_data" =~ \"audio\" ]]; then
-                    [[ "$update_data" =~ \"file_id\":\"([^\"]+)\" ]] && file_id="${BASH_REMATCH[1]}"
-                    [[ "$update_data" =~ \"file_name\":\"([^\"]+)\" ]] && file_name="${BASH_REMATCH[1]}"
-                    [ -z "$file_name" ] && file_name="audio_${uid}.mp3"
+            if [ "$is_auth_user" -eq 1 ] && [ "$is_auth_chat" -eq 1 ]; then
+                export BOT_TOKEN_CUR="$token"
+                export API_URL="https://api.telegram.org/bot${BOT_TOKEN_CUR}"
+                export BOT_USERNAME_CUR="$bot_username"
+                export MESSAGE_THREAD_ID_CUR="$thread_id"
+                if [[ "$update_data" =~ \"callback_query\" ]]; then
+                    local cb_id=""
+                    [[ "$update_data" =~ \"id\":\"([0-9]+)\" ]] && cb_id="${BASH_REMATCH[1]}"
+                    local cb_data=""
+                    [[ "$update_data" =~ \"data\":\"([^\"]+)\" ]] && cb_data="${BASH_REMATCH[1]}"
+                    if [ -n "$cb_data" ] && [ -n "$cb_id" ]; then handle_callback "$cb_data" "$cb_id" "$chat_id"; fi
+                elif [[ "$update_data" =~ \"document\"|\"photo\"|\"video\"|\"audio\" ]]; then
+                    local file_id=""
+                    local file_name=""
+                    if [[ "$update_data" =~ \"document\" ]]; then
+                        [[ "$update_data" =~ \"file_id\":\"([^\"]+)\" ]] && file_id="${BASH_REMATCH[1]}"
+                        [[ "$update_data" =~ \"file_name\":\"([^\"]+)\" ]] && file_name="${BASH_REMATCH[1]}"
+                    elif [[ "$update_data" =~ \"photo\" ]]; then
+                        file_id=$(echo "$update_data" | grep -o '"file_id":"[^"]*"' | tail -1 | cut -d'"' -f4)
+                        file_name="photo_${uid}.jpg"
+                    elif [[ "$update_data" =~ \"video\" ]]; then
+                        [[ "$update_data" =~ \"file_id\":\"([^\"]+)\" ]] && file_id="${BASH_REMATCH[1]}"
+                        [[ "$update_data" =~ \"file_name\":\"([^\"]+)\" ]] && file_name="${BASH_REMATCH[1]}"
+                        [ -z "$file_name" ] && file_name="video_${uid}.mp4"
+                    elif [[ "$update_data" =~ \"audio\" ]]; then
+                        [[ "$update_data" =~ \"file_id\":\"([^\"]+)\" ]] && file_id="${BASH_REMATCH[1]}"
+                        [[ "$update_data" =~ \"file_name\":\"([^\"]+)\" ]] && file_name="${BASH_REMATCH[1]}"
+                        [ -z "$file_name" ] && file_name="audio_${uid}.mp3"
+                    fi
+                    if [ -n "$file_id" ]; then
+                        handle_command_or_file "$chat_id" "" "$file_id" "$file_name"
+                    fi
+                elif [[ "$update_data" =~ \"message\" ]]; then
+                    local text=""
+                    [[ "$update_data" =~ \"text\":\"([^\"]+)\" ]] && text="${BASH_REMATCH[1]}"
+                    if [ -n "$text" ]; then handle_command_or_file "$chat_id" "$text" "" ""; fi
                 fi
-                if [ -n "$file_id" ]; then
-                    handle_command_or_file "$chat_id" "" "$file_id" "$file_name"
-                fi
-            elif [[ "$update_data" =~ \"message\" ]]; then
-                local text=""
-                [[ "$update_data" =~ \"text\":\"([^\"]+)\" ]] && text="${BASH_REMATCH[1]}"
-                if [ -n "$text" ]; then handle_command_or_file "$chat_id" "$text" "" ""; fi
             fi
         done
     done

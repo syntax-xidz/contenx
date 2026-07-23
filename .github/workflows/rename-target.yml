@@ -1,0 +1,57 @@
+name: rename target
+
+on:
+  workflow_dispatch:
+    inputs:
+      old_folder:
+        description: 'Nama folder lama pada target repo'
+        required: true
+        default: 'kernel/unknown'
+      new_folder:
+        description: 'Nama folder baru pada target repo'
+        required: true
+        default: 'kernel/custom'
+      target_branch:
+        description: 'Nama branch target di repo target'
+        required: true
+        default: 'main'
+      target_repo:
+        description: 'Target repo (user/repo)'
+        required: true
+        default: 'userA/target-repo'
+
+jobs:
+  rename-folder-target:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.target_repo }}
+          token: ${{ secrets.SECRET_KEY }}
+          ref: ${{ github.event.inputs.target_branch }}
+          path: target-repo
+
+      - name: Setup git user
+        run: |
+          cd target-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Rename folder if exists in target repo
+        run: |
+          cd target-repo
+          echo "Folder lama: ${{ github.event.inputs.old_folder }}"
+          echo "Folder baru: ${{ github.event.inputs.new_folder }}"
+
+          # Cek apakah folder lama ada
+          if [ -d "${{ github.event.inputs.old_folder }}" ]; then
+            mkdir -p "$(dirname "${{ github.event.inputs.new_folder }}")"
+            git mv "${{ github.event.inputs.old_folder }}" "${{ github.event.inputs.new_folder }}"
+            git commit -m "Rename folder ${{ github.event.inputs.old_folder }} to ${{ github.event.inputs.new_folder }} via workflow"
+            git push origin ${{ github.event.inputs.target_branch }}
+          else
+            echo "Folder lama '${{ github.event.inputs.old_folder }}' tidak ditemukan di target repo, batal rename."
+            exit 0
+          fi

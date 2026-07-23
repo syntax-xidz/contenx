@@ -1,0 +1,25 @@
+#!/bin/sh
+# /etc/hotplug.d/usb/23-modem-usb
+
+case "$ACTION" in
+    add)
+        case "$PRODUCT" in
+            413c/81d7/*|413c/81e0/*|1e2d/00b3/*|1e2d/00b7/*|2cb7/0007/*|05c6/90d5/*)
+                logger "Modem detected: $PRODUCT"
+                
+                if [ -f /tmp/issue ]; then
+                    (sleep 6; rm -rf /var/run/modemmanager/*; /etc/init.d/modemmanager restart) &
+                else
+                    touch /tmp/issue
+                fi
+                ;;
+        esac
+        ;;
+    remove)
+        case "$PRODUCT" in
+            413c/81d7/*|413c/81e0/*|1e2d/00b3/*|1e2d/00b7/*|2cb7/0007/*|05c6/90d5/*)
+                logger "Modem removed: $PRODUCT"
+                ;;
+        esac
+        ;;
+esac

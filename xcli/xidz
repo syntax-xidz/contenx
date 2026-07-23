@@ -1,0 +1,2420 @@
+#!/bin/bash
+#
+# Created By Fidz
+# Dilarang Remod Tanpa Ijin
+# © XIDZs-WRT PROJECT | 18 Juli 2026
+# https://github.com/de-quenx
+# https://t.me/xidz_x
+# xidzs-wrt.web.id
+#
+
+BOT_TOKENS="BOT_TOKEN"
+ALLOWED_CHAT_IDS="ID_TELEGRAM"
+ALLOWED_GROUP_IDS=""
+GROUP_MODE="0"
+OFFSET_FILE="/tmp/XIDZs_offset"
+LOG_FILE="/tmp/XIDZs.log"
+STATE_FILE_PREFIX="/tmp/bot_state_"
+DEFAULT_DL_DIR="/tmp/downloads"
+declare -A MAIN_MENU=(
+    ["STATUS"]="status"
+    ["INTERFACE"]="interface"
+    ["NETWORK"]="network_menu"
+    ["PACKAGES"]="pkg_menu"
+    ["TOOLS"]="tools_menu"
+    ["WIFI"]="wifi_menu"
+    ["MODEM"]="modem_menu"
+    ["TUNNEL"]="tunnel_menu"
+    ["VNSTAT"]="vnstat_menu"
+    ["SERVICES"]="services_menu"
+    ["TTL"]="ttl_menu"
+    ["CRONTABS"]="cron_menu"
+    ["THEME"]="theme_menu"
+    ["ABOUT"]="about_menu"
+    ["GPIO"]="gpio_menu"
+    ["BOT"]="bot_menu"
+    ["REMOTE"]="remote_menu"
+    ["CACHE"]="clear_memory"
+    ["REBOOT"]="reboot"
+    ["POWEROFF"]="poweroff"
+)
+declare -A PKG_MENU=(
+    ["Update Pkgs"]="pkg_update"
+    ["✔ Install Pkg"]="pkg_install_prompt"
+    ["✔ Custom Install"]="pkg_custom_prompt"
+    ["Download Pkg"]="pkg_dl_prompt"
+    ["Scan Dir"]="pkg_scan_prompt"
+)
+declare -A TOOLS_MENU=(
+    ["Scan Dir"]="tools_scan"
+    ["✘ Delete File/Dir"]="tools_delete"
+    ["Move File/Dir"]="tools_move"
+    ["✔ Upload File"]="tools_upload"
+    ["⬇ Download URL"]="tools_dl_url"
+    ["📦 Extract File"]="tools_extract"
+    ["Linux Shell"]="tools_shell"
+    ["Change LuCI Pass"]="tools_luci_pass_change"
+    ["View LuCI Pass"]="tools_luci_pass_view"
+    ["Change LAN IP"]="tools_change_ip"
+    ["⚙ Set Permission"]="tools_chmod"
+)
+declare -A SERVICES_MENU=(
+    ["Restart Adguard"]="svc_adguard"
+    ["Restart DNSMasq"]="svc_dnsmasq"
+    ["Samba Status"]="svc_samba"
+    ["Active Conn"]="svc_conn"
+)
+declare -A MODEM_MENU=(
+    ["Restart Modem"]="modem_restart"
+    ["Airplane Mode"]="modem_airplane"
+    ["Modem HP"]="modem_hp"
+)
+declare -A WIFI_MENU=(
+    ["✔ Enable WiFi"]="wifi_enable"
+    ["✘ Disable WiFi"]="wifi_disable"
+    ["View Devices"]="wifi_view_devs"
+    ["Manage Users"]="wifi_manage"
+    ["✘ Blocked Users"]="wifi_blocked"
+    ["Schedule"]="wifi_sched"
+    ["Change SSID"]="wifi_ssid"
+    ["Change Pass"]="wifi_pass"
+    ["View Pass"]="wifi_view_pass"
+    ["Change CH"]="w_ch_sel"
+    ["Change MODE"]="w_mo_sel"
+    ["Change Security"]="w_se_sel"
+)
+declare -A WIFI_SCHED_MENU=(
+    ["✔ Auto ON"]="wifi_sched_on"
+    ["✘ Auto OFF"]="wifi_sched_off"
+    ["Clear Sched"]="wifi_sched_clear"
+)
+declare -A GPIO_MENU=(
+    ["✔ Enable GPIO"]="gpio_enable"
+    ["✘ Disable GPIO"]="gpio_disable"
+)
+declare -A REMOTE_MENU=(
+    ["✔ Enable Remote"]="enable_remote"
+    ["✘ Disable Remote"]="disable_remote"
+    ["Restart Remote"]="restart_remote"
+    ["Status Remote"]="status_remote"
+)
+declare -A VNSTAT_MENU=(
+    ["Summary"]="vnstat_summary"
+    ["Daily"]="vnstat_daily"
+    ["Monthly"]="vnstat_monthly"
+    ["Hourly"]="vnstat_hourly"
+    ["Interface"]="vnstat_interface"
+)
+declare -A INTERFACE_ACTIONS=(
+    ["Restart"]="iface_restart"
+    ["Reload"]="iface_reload"
+    ["✘ Down"]="iface_down"
+    ["✔ Up"]="iface_up"
+)
+declare -A NETWORK_MENU=(
+    ["Test Internet"]="internet"
+    ["Speedtest"]="speedtest"
+    ["Restart Firewall"]="restart_firewall"
+    ["List DHCP"]="list_dhcp"
+    ["EQoS Plus"]="eqosplus_menu"
+    ["Restart NetData"]="restart_netdata"
+    ["Restart NetMon"]="restart_netmonitor"
+    ["Restart Bandix"]="restart_bandix"
+)
+declare -A TUNNEL_SERVICES=(
+    ["OpenClash"]="luci-app-openclash:openclash"
+    ["FusionTunX"]="luci-app-fusiontunx:fusiontunx"
+    ["Neko"]="luci-app-neko:neko"
+    ["PassWall"]="luci-app-passwall:passwall"
+    ["Nikki"]="luci-app-nikki:nikki"
+)
+declare -A TUNNEL_ACTIONS=(
+    ["Status"]="tunnel_status"
+    ["✘ Stop"]="tunnel_stop"
+    ["Restart"]="tunnel_restart"
+    ["✔ Start"]="tunnel_start"
+    ["Dashboard API"]="tunnel_dash"
+)
+escape_html() { echo "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'; }
+log_message() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"; }
+send_message() {
+    local message="$1"
+    local default_id=$(grep "^ALLOWED_CHAT_IDS=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2 | awk '{print $1}')
+    local chat_id="${2:-$default_id}"
+    local json_payload
+    local end_uptime=$(cut -d' ' -f1 /proc/uptime)
+    local d_time=$(awk "BEGIN { printf \"%.2f\", $end_uptime - ${START_UPTIME:-$end_uptime} }")
+    local p_val=$(ping -c 1 -W 1 8.8.8.8 2>/dev/null | sed -n 's/.*time=\([0-9.]*\).*/\1/p')
+    if [ -n "$p_val" ]; then p_val=$(awk "BEGIN {printf \"%.2f\", $p_val}"); else p_val="0.00"; fi
+    message="${message}\n\nProses ${d_time}s | ${p_val}ms"
+    if [ -n "$MESSAGE_THREAD_ID_CUR" ]; then
+        json_payload=$(jq -n --arg cid "$chat_id" --arg tid "$MESSAGE_THREAD_ID_CUR" --arg text "$(echo -e "$message")" '{chat_id: $cid, message_thread_id: ($tid|tonumber), text: $text, parse_mode: "HTML"}')
+    else
+        json_payload=$(jq -n --arg cid "$chat_id" --arg text "$(echo -e "$message")" '{chat_id: $cid, text: $text, parse_mode: "HTML"}')
+    fi
+    local response=$(curl $CURL_RESOLVE -s -X POST "${API_URL}/sendMessage" -H "Content-Type: application/json" -d "$json_payload")
+    local msg_id=$(echo "$response" | grep -o '"message_id":[0-9]*' | cut -d':' -f2)
+    local thread_suffix=""; [ -n "$MESSAGE_THREAD_ID_CUR" ] && thread_suffix="_${MESSAGE_THREAD_ID_CUR}"
+    [ -n "$msg_id" ] && echo "$msg_id" > "/tmp/xidz_lastmsg_${chat_id}${thread_suffix}_${BOT_TOKEN_CUR//:/_}"
+}
+delete_last_message() {
+    local chat_id="$1"
+    local thread_suffix=""; [ -n "$MESSAGE_THREAD_ID_CUR" ] && thread_suffix="_${MESSAGE_THREAD_ID_CUR}"
+    local msg_file="/tmp/xidz_lastmsg_${chat_id}${thread_suffix}_${BOT_TOKEN_CUR//:/_}"
+    if [ -f "$msg_file" ]; then
+        local last_id=$(cat "$msg_file")
+        if [ -n "$last_id" ]; then
+            curl $CURL_RESOLVE -s -X POST "${API_URL}/deleteMessage" -H "Content-Type: application/json" -d "{\"chat_id\":\"${chat_id}\",\"message_id\":${last_id}}" > /dev/null 2>&1 &
+        fi
+        rm -f "$msg_file"
+    fi
+}
+build_keyboard() {
+    local -n menu_array=$1
+    local columns=${2:-3}
+    local add_back=${3:-true}
+    local keyboard="["
+    local count=0
+    local row="["
+    for key in "${!menu_array[@]}"; do
+        local value="${menu_array[$key]}"
+        if [ $count -gt 0 ]; then row="${row},"; fi
+        row="${row}{\"text\":\"${key}\",\"callback_data\":\"${value}\"}"
+        count=$((count + 1))
+        if [ $count -eq $columns ]; then
+            keyboard="${keyboard}${row}],"
+            row="["
+            count=0
+        fi
+    done
+    if [ $count -gt 0 ]; then keyboard="${keyboard}${row}],"; fi
+    if [ "$add_back" = true ]; then keyboard="${keyboard}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]"; else keyboard="${keyboard:0:-1}"; fi
+    keyboard="${keyboard}]"
+    echo "$keyboard"
+}
+send_keyboard_menu() {
+    local message="$1"
+    local chat_id="$2"
+    local keyboard="$3"
+    local json_payload
+    local end_uptime=$(cut -d' ' -f1 /proc/uptime)
+    local d_time=$(awk "BEGIN { printf \"%.2f\", $end_uptime - ${START_UPTIME:-$end_uptime} }")
+    local p_val=$(ping -c 1 -W 1 8.8.8.8 2>/dev/null | sed -n 's/.*time=\([0-9.]*\).*/\1/p')
+    if [ -n "$p_val" ]; then p_val=$(awk "BEGIN {printf \"%.2f\", $p_val}"); else p_val="0.00"; fi
+    message="${message}\n\nProses ${d_time}s | ${p_val}ms"
+    if [ -n "$MESSAGE_THREAD_ID_CUR" ]; then
+        json_payload=$(jq -n --arg cid "$chat_id" --arg tid "$MESSAGE_THREAD_ID_CUR" --arg text "$(echo -e "$message")" --argjson kb "$keyboard" '{chat_id: $cid, message_thread_id: ($tid|tonumber), text: $text, parse_mode: "HTML", reply_markup: {inline_keyboard: $kb}}')
+    else
+        json_payload=$(jq -n --arg cid "$chat_id" --arg text "$(echo -e "$message")" --argjson kb "$keyboard" '{chat_id: $cid, text: $text, parse_mode: "HTML", reply_markup: {inline_keyboard: $kb}}')
+    fi
+    local thread_suffix=""; [ -n "$MESSAGE_THREAD_ID_CUR" ] && thread_suffix="_${MESSAGE_THREAD_ID_CUR}"
+    local msg_file="/tmp/xidz_lastmsg_${chat_id}${thread_suffix}_${BOT_TOKEN_CUR//:/_}"
+    local last_id=""
+    [ -f "$msg_file" ] && last_id=$(cat "$msg_file")
+    local response
+    local msg_id
+    if [ -n "$last_id" ]; then
+        local edit_payload=$(jq -n --arg cid "$chat_id" --arg mid "$last_id" --arg text "$(echo -e "$message")" --argjson kb "$keyboard" '{chat_id: $cid, message_id: ($mid|tonumber), text: $text, parse_mode: "HTML", reply_markup: {inline_keyboard: $kb}}')
+        response=$(curl $CURL_RESOLVE -s -X POST "${API_URL}/editMessageText" -H "Content-Type: application/json" -d "$edit_payload")
+        local ok=$(echo "$response" | grep -o '"ok":true')
+        if [ -z "$ok" ]; then
+            local is_not_mod=$(echo "$response" | grep -o 'message is not modified')
+            if [ -z "$is_not_mod" ]; then
+                response=$(curl $CURL_RESOLVE -s -X POST "${API_URL}/sendMessage" -H "Content-Type: application/json" -d "$json_payload")
+                msg_id=$(echo "$response" | grep -o '"message_id":[0-9]*' | cut -d':' -f2)
+                [ -n "$msg_id" ] && echo "$msg_id" > "$msg_file"
+            fi
+        fi
+    else
+        response=$(curl $CURL_RESOLVE -s -X POST "${API_URL}/sendMessage" -H "Content-Type: application/json" -d "$json_payload")
+        msg_id=$(echo "$response" | grep -o '"message_id":[0-9]*' | cut -d':' -f2)
+        [ -n "$msg_id" ] && echo "$msg_id" > "$msg_file"
+    fi
+}
+answer_callback() { curl $CURL_RESOLVE -s -X POST "${API_URL}/answerCallbackQuery" -d "callback_query_id=$1" > /dev/null 2>&1 & }
+uptime_str() {
+    local u=$(cut -d. -f1 /proc/uptime)
+    local d=$((u/86400))
+    local h=$((u%86400/3600))
+    local m=$((u%3600/60))
+    local s=$((u%60))
+    local result=""
+    [ $d -gt 0 ] && result="${d}d "
+    result="${result}$(printf "%02d:%02d:%02d" $h $m $s)"
+    echo "$result"
+}
+get_cpu_temp() { if [ -f /sys/class/thermal/thermal_zone0/temp ]; then awk '{printf("%.1fC", $1/1000)}' /sys/class/thermal/thermal_zone0/temp; else echo ""; fi; }
+get_cpu_freq() { if [ -f /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq ]; then awk '{printf("%.0f MHz", $1/1000)}' /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq; else echo ""; fi; }
+get_public_ip_info() {
+    local ip_info=$(curl -s --max-time 5 "http://ip-api.com/json/" 2>/dev/null)
+    if [ -z "$ip_info" ]; then echo "Unknown|Unknown|Unknown|Unknown|Unknown|Unknown"; return; fi
+    local ip=$(echo "$ip_info" | grep -o '"query":"[^"]*"' | cut -d'"' -f4)
+    local country=$(echo "$ip_info" | grep -o '"country":"[^"]*"' | cut -d'"' -f4)
+    local city=$(echo "$ip_info" | grep -o '"city":"[^"]*"' | cut -d'"' -f4)
+    local isp=$(echo "$ip_info" | grep -o '"isp":"[^"]*"' | cut -d'"' -f4)
+    local region=$(echo "$ip_info" | grep -o '"regionName":"[^"]*"' | cut -d'"' -f4)
+    local region_code=$(echo "$ip_info" | grep -o '"region":"[^"]*"' | cut -d'"' -f4)
+    [ -z "$ip" ] && ip="Unknown"
+    [ -z "$country" ] && country="Unknown"
+    [ -z "$city" ] && city="Unknown"
+    [ -z "$isp" ] && isp="Unknown"
+    [ -z "$region" ] && region="Unknown"
+    [ -z "$region_code" ] && region_code="Unknown"
+    echo "${ip}|${country}|${city}|${isp}|${region}|${region_code}"
+}
+show_main_menu() {
+    local chat_id="$1"
+    local keyboard=$(build_keyboard MAIN_MENU 4 false)
+    local ip_info=$(get_public_ip_info)
+    local ip=$(echo "$ip_info" | cut -d'|' -f1)
+    local country=$(echo "$ip_info" | cut -d'|' -f2)
+    local city=$(echo "$ip_info" | cut -d'|' -f3)
+    local isp=$(echo "$ip_info" | cut -d'|' -f4)
+    
+    local ping_ms=$(ping -c 1 -W 2 8.8.8.8 2>/dev/null | sed -n 's/.*time=\([0-9.]*\).*/\1/p')
+    if [ -n "$ping_ms" ]; then ping_ms=$(awk "BEGIN {printf \"%.3f\", $ping_ms}"); else ping_ms="N/A"; fi
+    
+    local hostname=$(cat /proc/sys/kernel/hostname 2>/dev/null)
+    [ -z "$hostname" ] && hostname=$(uci -q get system.@system[0].hostname 2>/dev/null)
+    [ -z "$hostname" ] && hostname="OpenWrt"
+    
+    local day_en=$(date +%A)
+    local day_id="Senin"
+    case "$day_en" in
+        Monday) day_id="Senin";;
+        Tuesday) day_id="Selasa";;
+        Wednesday) day_id="Rabu";;
+        Thursday) day_id="Kamis";;
+        Friday) day_id="Jumat";;
+        Saturday) day_id="Sabtu";;
+        Sunday) day_id="Minggu";;
+    esac
+    local wib_str="$(date '+%H:%M') WIB | ${day_id} | $(date '+%d/%m/%Y')"
+    
+    local iface_stats=""
+    if [ -d "/sys/class/net/br-lan" ]; then
+        local rx=$(cat "/sys/class/net/br-lan/statistics/rx_bytes" 2>/dev/null || echo 0)
+        local tx=$(cat "/sys/class/net/br-lan/statistics/tx_bytes" 2>/dev/null || echo 0)
+        local total=$((rx + tx))
+        local usage_str=""
+        if [ "$total" -ge 1073741824 ]; then
+            usage_str=$(awk "BEGIN {printf \"%.1f GB\", $total/1073741824}")
+        else
+            usage_str=$(awk "BEGIN {printf \"%.1f MB\", $total/1048576}")
+        fi
+        iface_stats="br-lan : ${usage_str}"
+    fi
+
+    for iface_path in /sys/class/net/*; do
+        [ ! -d "$iface_path" ] && continue
+        local iface=$(basename "$iface_path")
+        if [[ "$iface" =~ ^(lo|ifb.*|teql.*|erspan.*|gre.*|ip_vti.*|ip6.*|sit.*|br-lan)$ ]]; then continue; fi
+        local state=$(cat "$iface_path/operstate" 2>/dev/null || echo "unknown")
+        local carrier=$(cat "$iface_path/carrier" 2>/dev/null || echo "0")
+        if [ "$state" = "up" ] && [ "$carrier" = "1" ]; then
+            local rx=$(cat "$iface_path/statistics/rx_bytes" 2>/dev/null || echo 0)
+            local tx=$(cat "$iface_path/statistics/tx_bytes" 2>/dev/null || echo 0)
+            local total=$((rx + tx))
+            if [ "$total" -gt 0 ]; then
+                local usage_str=""
+                if [ "$total" -ge 1073741824 ]; then
+                    usage_str=$(awk "BEGIN {printf \"%.1f GB\", $total/1073741824}")
+                else
+                    usage_str=$(awk "BEGIN {printf \"%.1f MB\", $total/1048576}")
+                fi
+                if [ -z "$iface_stats" ]; then
+                    iface_stats="${iface} : ${usage_str}"
+                else
+                    iface_stats="${iface_stats} | ${iface} : ${usage_str}"
+                fi
+            fi
+        fi
+    done
+
+    send_keyboard_menu "XIDZs Monitor\n\nHello ... ${hostname}\nPing: ${ping_ms} ms\nIP: <span class=\"tg-spoiler\">${ip}</span>\nISP: ${isp}\nLocation: ${city}, ${country}\nWaktu : ${wib_str}\n${iface_stats}\n\nSelect option:" "$chat_id" "$keyboard"
+}
+show_pkg_menu() {
+    local chat_id="$1"
+    local keyboard=$(build_keyboard PKG_MENU 3 true)
+    send_keyboard_menu "Packages Manager\nChoose option:" "$chat_id" "$keyboard"
+}
+pkg_update_action() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"pkg_menu\"}]]"
+    send_keyboard_menu "Updating Packages..." "$chat_id" "$kb"
+    local out
+    local success=0
+    out=$(opkg update 2>&1) && success=1
+    out=$(escape_html "$out")
+    if [ "$success" -eq 1 ]; then
+        send_keyboard_menu "✔ Update Success:\n<pre>${out:0:2000}</pre>" "$chat_id" "$kb"
+    else
+        send_keyboard_menu "✘ Update Error:\n<pre>${out:0:2000}</pre>" "$chat_id" "$kb"
+    fi
+}
+show_tools_menu() {
+    local chat_id="$1"
+    local keyboard=$(build_keyboard TOOLS_MENU 3 true)
+    send_keyboard_menu "System Tools\nChoose option:" "$chat_id" "$keyboard"
+}
+show_cron_menu() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"✔ Add Cron\",\"callback_data\":\"add_cron\"},{\"text\":\"✘ Del Cron\",\"callback_data\":\"del_cron\"}],[{\"text\":\"View Cron\",\"callback_data\":\"view_cron\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]]"
+    local cron_cnt=$(wc -l < /etc/crontabs/root 2>/dev/null || echo 0)
+    send_keyboard_menu "Crontabs Manager\n\nTotal Crons: $cron_cnt\n\nSelect action:" "$chat_id" "$kb"
+}
+view_cron() {
+    local chat_id="$1"
+    local crons=$(cat /etc/crontabs/root 2>/dev/null)
+    [ -z "$crons" ] && crons="No cron jobs."
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"cron_menu\"}]]"
+    crons=$(escape_html "$crons")
+    send_keyboard_menu "Current Crontabs:\n\n<pre>$crons</pre>" "$chat_id" "$kb"
+}
+del_cron_menu() {
+    local chat_id="$1"
+    if [ ! -s /etc/crontabs/root ]; then
+        local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"cron_menu\"}]]"
+        send_keyboard_menu "✘ No crons saved." "$chat_id" "$kb"
+        return
+    fi
+    local kb="["
+    local n=1
+    local col_count=0
+    local row="["
+    local msg="Saved Crons:\n"
+    while read -r line; do
+        [ -z "$line" ] && continue
+        local short_line="${line:0:25}"
+        msg="${msg}${n}. ${short_line}...\n"
+        [ $col_count -gt 0 ] && row="${row},"
+        row="${row}{\"text\":\"✘ Delete $n\",\"callback_data\":\"rmc_${n}\"}"
+        col_count=$((col_count+1))
+        n=$((n+1))
+        if [ $col_count -eq 3 ]; then
+            kb="${kb}${row}],"
+            row="["
+            col_count=0
+        fi
+    done < /etc/crontabs/root
+    if [ $col_count -gt 0 ]; then kb="${kb}${row}],"; fi
+    kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"cron_menu\"}]]"
+    msg=$(escape_html "$msg")
+    send_keyboard_menu "$msg\nSelect cron to delete:" "$chat_id" "$kb"
+}
+show_theme_menu() {
+    local chat_id="$1"
+    local themes=$(uci show luci.themes 2>/dev/null | cut -d. -f3 | cut -d= -f1)
+    if [ -z "$themes" ]; then
+        local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]]"
+        send_keyboard_menu "✘ No themes found in UCI." "$chat_id" "$kb"
+        return
+    fi
+    local kb="["
+    local col_count=0
+    local row="["
+    local current=$(uci get luci.main.mediaurlbase 2>/dev/null)
+    for t in $themes; do
+        local t_path=$(uci -q get luci.themes.$t)
+        local mark=""
+        [ "$t_path" = "$current" ] && mark="✔ "
+        [ $col_count -gt 0 ] && row="${row},"
+        row="${row}{\"text\":\"${mark}${t}\",\"callback_data\":\"set_theme_${t}\"}"
+        col_count=$((col_count+1))
+        if [ $col_count -eq 3 ]; then
+            kb="${kb}${row}],"
+            row="["
+            col_count=0
+        fi
+    done
+    if [ $col_count -gt 0 ]; then kb="${kb}${row}],"; fi
+    kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]]"
+    send_keyboard_menu "Theme Manager\n\nSelect theme to apply:" "$chat_id" "$kb"
+}
+show_about_menu() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]]"
+    local msg="✧ XIDZs OS Monitor & Controller ✧\n\n✦ Developer : Fidz\n✦ Version : 2.6 | DEV\n✦ Engine : ☑︎ Pure Bash Scripting\n\n✩ Website : xidzs-wrt.web.id\n✩ GitHub : github.com/de-quenx\n✩ Telegram : t.me/xidz_x\n\n⊗ Status: Optimal"
+    send_keyboard_menu "$msg" "$chat_id" "$kb"
+}
+show_ttl_menu() {
+    local chat_id="$1"
+    local val=$(nft list chain inet fw4 mangle_postrouting_ttl67 2>/dev/null | grep -o 'ip ttl set [0-9]*' | grep -o '[0-9]*' | head -n 1)
+    [ -z "$val" ] && val=$(cat /etc/xidzs_ttl.txt 2>/dev/null || echo "65")
+    local stat="✘ Disabled"
+    nft list chain inet fw4 mangle_postrouting_ttl67 2>/dev/null | grep -q "ip ttl set" && stat="✔ Enabled"
+    local kb="[[{\"text\":\"✔ Enable TTL\",\"callback_data\":\"ttl_enable\"},{\"text\":\"✘ Disable TTL\",\"callback_data\":\"ttl_disable\"}],[{\"text\":\"Change TTL\",\"callback_data\":\"ttl_change\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]]"
+    send_keyboard_menu "TTL Modification (nftables)\n\nStatus: $stat\nCurrent Value: $val\n\nSelect action:" "$chat_id" "$kb"
+}
+ttl_enable() {
+    local chat_id="$1"
+    local silent="$2"
+    local val=$(cat /etc/xidzs_ttl.txt 2>/dev/null || echo "65")
+    mkdir -p /etc/nftables.d
+    local ttl_file="/etc/nftables.d/ttl67.nft"
+    cat > "$ttl_file" << EOF
+chain mangle_postrouting_ttl67 {
+    type filter hook postrouting priority 300; policy accept;
+    counter ip ttl set $val
+}
+chain mangle_prerouting_ttl67 {
+    type filter hook prerouting priority 300; policy accept;
+    counter ip ttl set $val
+}
+EOF
+    nft -f "$ttl_file" 2>/dev/null
+    /etc/init.d/firewall restart >/dev/null 2>&1
+    [ -z "$silent" ] && { local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"ttl_menu\"}]]"; send_keyboard_menu "✔ TTL $val Enabled & Saved!" "$chat_id" "$kb"; }
+}
+ttl_disable() {
+    local chat_id="$1"
+    local silent="$2"
+    nft delete chain inet fw4 mangle_postrouting_ttl67 2>/dev/null
+    nft delete chain inet fw4 mangle_prerouting_ttl67 2>/dev/null
+    mkdir -p /etc/nftables.d
+    echo "" > /etc/nftables.d/ttl67.nft
+    /etc/init.d/firewall restart >/dev/null 2>&1
+    [ -z "$silent" ] && { local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"ttl_menu\"}]]"; send_keyboard_menu "✔ TTL Disabled & Cleared!" "$chat_id" "$kb"; }
+}
+eqosplus_menu() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"✔ Enable\",\"callback_data\":\"eqosplus_enable\"},{\"text\":\"✘ Disable\",\"callback_data\":\"eqosplus_disable\"}],[{\"text\":\"View Limits\",\"callback_data\":\"eqosplus_view\"},{\"text\":\"Restart\",\"callback_data\":\"eqosplus_restart\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"network_menu\"}]]"
+    local stat="Disabled"
+    if uci show eqosplus 2>/dev/null | grep -q "\.enabled='1'"; then stat="Enabled"; fi
+    send_keyboard_menu "EQoS Plus Management\nStatus: $stat\n\nSelect action:" "$chat_id" "$kb"
+}
+eqosplus_enable() {
+    local chat_id="$1"
+    uci set eqosplus.@eqosplus[0].enabled='1' 2>/dev/null || uci set eqosplus.config.enabled='1' 2>/dev/null
+    uci commit eqosplus
+    sleep 1
+    /etc/init.d/eqosplus reload >/dev/null 2>&1 || /etc/init.d/eqosplus restart >/dev/null 2>&1
+    eqosplus_show_users "$chat_id"
+}
+eqosplus_disable() {
+    local chat_id="$1"
+    uci set eqosplus.@eqosplus[0].enabled='0' 2>/dev/null || uci set eqosplus.config.enabled='0' 2>/dev/null
+    uci commit eqosplus
+    sleep 1
+    /etc/init.d/eqosplus stop >/dev/null 2>&1
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"eqosplus_menu\"}]]"
+    send_keyboard_menu "✘ EQoS Plus Disabled." "$chat_id" "$kb"
+}
+eqosplus_show_users() {
+    local chat_id="$1"
+    local kb="["
+    local col_count=0
+    local total=0
+    local row="["
+    local list_info="Connected Devices:\n"
+    if [ -f "/tmp/dhcp.leases" ]; then
+        while read -r expire mac ip hostname rest; do
+            [ "$hostname" = "*" ] && hostname="$ip"
+            list_info="${list_info}- ${hostname:0:15}\n  ${ip} | ${mac}\n"
+            local clean_host=$(escape_html "${hostname:0:15}")
+            [ $col_count -gt 0 ] && row="${row},"
+            row="${row}{\"text\":\"${clean_host} (${ip})\",\"callback_data\":\"eqos_set_${ip}\"}"
+            col_count=$((col_count+1))
+            total=$((total+1))
+            if [ $col_count -eq 2 ]; then
+                kb="${kb}${row}],"
+                row="["
+                col_count=0
+            fi
+        done < "/tmp/dhcp.leases"
+    fi
+    if [ "$total" -eq 0 ]; then
+        local b_kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"eqosplus_menu\"}]]"
+        send_keyboard_menu "✔ EQoS Enabled.\nNo connected users found." "$chat_id" "$b_kb"
+        return
+    fi
+    if [ $col_count -gt 0 ]; then kb="${kb}${row}],"; fi
+    kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"eqosplus_menu\"}]]"
+    list_info=$(escape_html "$list_info")
+    send_keyboard_menu "✔ EQoS Enabled.\n\n<pre>${list_info}</pre>\nSelect device to limit speed:" "$chat_id" "$kb"
+}
+eqosplus_view() {
+    local chat_id="$1"
+    local out=""
+    local rules=$(uci show eqosplus 2>/dev/null | grep "=device" | cut -d. -f2 | cut -d= -f1)
+    for r in $rules; do
+        local ip=$(uci -q get eqosplus.$r.ip)
+        local mac=$(uci -q get eqosplus.$r.mac)
+        local up=$(uci -q get eqosplus.$r.upload)
+        local down=$(uci -q get eqosplus.$r.download)
+        local ts=$(uci -q get eqosplus.$r.timestart)
+        local te=$(uci -q get eqosplus.$r.timeend)
+        local w=$(uci -q get eqosplus.$r.week)
+        local en=$(uci -q get eqosplus.$r.enable)
+        [ -z "$en" ] && en=$(uci -q get eqosplus.$r.enabled)
+        local target="$ip"
+        [ -z "$target" ] && target="$mac"
+        out="${out}- ${target} | U:${up} D:${down} | ${ts}-${te} W:${w} [En:${en}]\n"
+    done
+    [ -z "$out" ] && out="No rules found."
+    local kb="[[{\"text\":\"Clear All Rules\",\"callback_data\":\"eqosplus_clear\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"eqosplus_menu\"}]]"
+    send_keyboard_menu "EQoS Plus Rules:\n<pre>$out</pre>" "$chat_id" "$kb"
+}
+eqosplus_clear() {
+    local chat_id="$1"
+    local rules=$(uci show eqosplus 2>/dev/null | grep "=device" | cut -d. -f2 | cut -d= -f1)
+    for r in $rules; do uci delete eqosplus.$r 2>/dev/null; done
+    uci commit eqosplus
+    sleep 1
+    /etc/init.d/eqosplus reload >/dev/null 2>&1 || /etc/init.d/eqosplus restart >/dev/null 2>&1
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"eqosplus_menu\"}]]"
+    send_keyboard_menu "✔ All EQoS rules cleared." "$chat_id" "$kb"
+}
+show_services_menu() {
+    local chat_id="$1"
+    local keyboard=$(build_keyboard SERVICES_MENU 3 true)
+    send_keyboard_menu "System Services\nChoose option:" "$chat_id" "$keyboard"
+}
+restart_adguard() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"services_menu\"}]]"
+    send_keyboard_menu "Restarting AdguardHome..." "$chat_id" "$kb"
+    if [ -f "/etc/init.d/adguardhome" ]; then /etc/init.d/adguardhome restart >/dev/null 2>&1; send_keyboard_menu "✔ AdguardHome Restarted\nTime: $(date '+%H:%M:%S')" "$chat_id" "$kb"; else send_keyboard_menu "✘ AdguardHome service not found" "$chat_id" "$kb"; fi
+}
+restart_dnsmasq() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"services_menu\"}]]"
+    send_keyboard_menu "Restarting DNSMasq..." "$chat_id" "$kb"
+    if [ -f "/etc/init.d/dnsmasq" ]; then /etc/init.d/dnsmasq restart >/dev/null 2>&1; send_keyboard_menu "✔ DNSMasq Restarted\nTime: $(date '+%H:%M:%S')" "$chat_id" "$kb"; else send_keyboard_menu "✘ DNSMasq service not found" "$chat_id" "$kb"; fi
+}
+restart_netdata() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"network_menu\"}]]"
+    send_keyboard_menu "Restarting NetData..." "$chat_id" "$kb"
+    if [ -f "/etc/init.d/netdata" ]; then /etc/init.d/netdata restart >/dev/null 2>&1; send_keyboard_menu "✔ NetData Restarted." "$chat_id" "$kb"; else send_keyboard_menu "✘ NetData service not found." "$chat_id" "$kb"; fi
+}
+restart_netmonitor() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"network_menu\"}]]"
+    send_keyboard_menu "Restarting NetMonitor..." "$chat_id" "$kb"
+    if [ -f "/etc/init.d/netmonitor" ]; then /etc/init.d/netmonitor restart >/dev/null 2>&1; send_keyboard_menu "✔ NetMonitor Restarted." "$chat_id" "$kb"; else send_keyboard_menu "✘ NetMonitor service not found." "$chat_id" "$kb"; fi
+}
+restart_bandix() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"network_menu\"}]]"
+    send_keyboard_menu "Restarting Bandix..." "$chat_id" "$kb"
+    if [ -f "/etc/init.d/bandix" ]; then /etc/init.d/bandix restart >/dev/null 2>&1; send_keyboard_menu "✔ Bandix Restarted." "$chat_id" "$kb"; else send_keyboard_menu "✘ Bandix service not found." "$chat_id" "$kb"; fi
+}
+status_samba() {
+    local chat_id="$1"
+    local stat="Not Installed"
+    if [ -f "/etc/init.d/samba4" ]; then stat=$(/etc/init.d/samba4 status 2>/dev/null); elif [ -f "/etc/init.d/samba" ]; then stat=$(/etc/init.d/samba status 2>/dev/null); fi
+    stat=$(escape_html "$stat")
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"services_menu\"}]]"
+    send_keyboard_menu "Samba Status:\n<pre>$stat</pre>" "$chat_id" "$kb"
+}
+active_connections() {
+    local chat_id="$1"
+    local nf_count=$(cat /proc/sys/net/netfilter/nf_conntrack_count 2>/dev/null || echo "N/A")
+    local nf_max=$(cat /proc/sys/net/netfilter/nf_conntrack_max 2>/dev/null || echo "N/A")
+    local tcp_est=$(netstat -an 2>/dev/null | grep -c ESTABLISHED)
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"services_menu\"}]]"
+    send_keyboard_menu "Active Connections\nConntrack: ${nf_count} / ${nf_max}\nTCP Est: ${tcp_est}" "$chat_id" "$kb"
+}
+show_gpio_menu() {
+    local chat_id="$1"
+    local keyboard=$(build_keyboard GPIO_MENU 3 true)
+    send_keyboard_menu "GPIO Control" "$chat_id" "$keyboard"
+}
+show_remote_menu() {
+    local chat_id="$1"
+    local ts="Not Running"
+    if [ -f "/etc/config/tailscale" ] && /etc/init.d/tailscale status 2>/dev/null | grep -q "running"; then ts="Running"; fi
+    local keyboard=$(build_keyboard REMOTE_MENU 3 true)
+    send_keyboard_menu "REMOTE Control\nTailscale: ${ts}" "$chat_id" "$keyboard"
+}
+show_bot_menu() {
+    local chat_id="$1"
+    local gm_val=$(grep "^GROUP_MODE=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2)
+    local gm_stat="✘ Disabled"
+    [ "$gm_val" = "1" ] && gm_stat="✔ Enabled"
+    declare -A DYN_BOT_MENU=(
+        ["Restart BOT"]="bot_restart"
+        ["✘ Stop BOT"]="bot_disable"
+        ["✔ Enable BOOT"]="enable_on_boot"
+        ["✘ Disable BOOT"]="disable_on_boot"
+        ["Change Token"]="bot_change_token"
+        ["Add Admin"]="bot_add_admin"
+        ["Del Admin"]="bot_del_admin"
+        ["View Admins"]="bot_view_admins"
+        ["Add Group"]="bot_add_group"
+        ["Del Group"]="bot_del_group"
+        ["View Groups"]="bot_view_groups"
+        ["Auto Restart"]="bot_auto_restart"
+    )
+    if [ "$gm_val" = "1" ]; then
+        DYN_BOT_MENU["✘ Disable Group"]="bot_grp_off"
+    else
+        DYN_BOT_MENU["✔ Enable Group"]="bot_grp_on"
+    fi
+    local keyboard=$(build_keyboard DYN_BOT_MENU 3 true)
+    send_keyboard_menu "BOT Control\n\nGroup Mode: $gm_stat" "$chat_id" "$keyboard"
+}
+show_wifi_menu() {
+    local chat_id="$1"
+    local wifi_status="Unknown"
+    local enabled_count=0
+    local total_count=0
+    local i=0
+    while uci get wireless.@wifi-device[$i] >/dev/null 2>&1; do
+        total_count=$((total_count+1))
+        local disabled=$(uci -q get wireless.@wifi-device[$i].disabled)
+        if [ -z "$disabled" ] || [ "$disabled" = "0" ]; then enabled_count=$((enabled_count + 1)); fi
+        i=$((i+1))
+    done
+
+    if [ "$enabled_count" -gt 0 ]; then
+        local details=""
+        local j=0
+        while uci get wireless.@wifi-iface[$j] >/dev/null 2>&1; do
+            local iface_disabled=$(uci -q get wireless.@wifi-iface[$j].disabled)
+            local dev=$(uci -q get wireless.@wifi-iface[$j].device)
+            local dev_disabled="0"
+            [ -n "$dev" ] && dev_disabled=$(uci -q get wireless.$dev.disabled)
+            
+            if [ "$iface_disabled" != "1" ] && [ "$dev_disabled" != "1" ]; then
+                local ssid=$(uci -q get wireless.@wifi-iface[$j].ssid)
+                local enc=$(uci -q get wireless.@wifi-iface[$j].encryption)
+                local ch=$(uci -q get wireless.$dev.channel)
+                local ht=$(uci -q get wireless.$dev.htmode)
+                
+                local mode=""
+                if [[ "$ht" =~ ([0-9]+) ]]; then
+                    mode="${BASH_REMATCH[1]}MHZ"
+                else
+                    mode="$ht"
+                fi
+                
+                local key_disp=""
+                case "$enc" in
+                    *psk-mixed*|*psk+psk2*) key_disp="WPA/WPA2/PERSONAL" ;;
+                    *psk2+ccmp*|*psk2*) key_disp="WPA2/PERSONAL" ;;
+                    *sae-mixed*) key_disp="WPA2/WPA3/PERSONAL" ;;
+                    *sae*) key_disp="WPA3/PERSONAL" ;;
+                    *psk*) key_disp="WPA/PERSONAL" ;;
+                    none) key_disp="NONE" ;;
+                    *) key_disp=$(echo "$enc" | tr '[:lower:]' '[:upper:]') ;;
+                esac
+                
+                [ -n "$details" ] && details="${details}\n\n"
+                details="${details}SSID: ${ssid}\nCH: ${ch:-Auto}\nMODE: ${mode:-Auto}\nKEY: ${key_disp}"
+            fi
+            j=$((j+1))
+        done
+        
+        if [ -n "$details" ]; then
+            details=$(escape_html "$details")
+            wifi_status="✔ Enabled (${enabled_count}/${total_count})\n${details}"
+        else
+            wifi_status="✔ Enabled (${enabled_count}/${total_count})\nNo Active SSID"
+        fi
+    else
+        wifi_status="✘ Disabled"
+    fi
+
+    local keyboard=$(build_keyboard WIFI_MENU 3 true)
+    send_keyboard_menu "WiFi Control\nStatus: ${wifi_status}" "$chat_id" "$keyboard"
+}
+wifi_select_radio() {
+    local action="$1"
+    local chat_id="$2"
+    local radios=$(uci show wireless 2>/dev/null | grep "=wifi-device" | cut -d. -f2 | cut -d= -f1)
+    local kb="["
+    local row="["
+    local col=0
+    for r in $radios; do
+        local hw=$(uci -q get wireless.$r.hwmode)
+        local band=$(uci -q get wireless.$r.band)
+        local lbl="$r"
+        [ -n "$band" ] && lbl="$lbl (${band})"
+        [ $col -gt 0 ] && row="${row},"
+        row="${row}{\"text\":\"${lbl}\",\"callback_data\":\"w_${action}_r_${r}\"}"
+        col=$((col+1))
+        if [ $col -eq 2 ]; then kb="${kb}${row}],"; row="["; col=0; fi
+    done
+    if [ $col -gt 0 ]; then kb="${kb}${row}],"; fi
+    kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    local t_action="Channel"
+    [ "$action" = "mo" ] && t_action="Mode"
+    send_keyboard_menu "Select Radio for Changing ${t_action}:" "$chat_id" "$kb"
+}
+wifi_select_iface() {
+    local chat_id="$1"
+    local kb="["
+    local row="["
+    local col=0
+    local i=0
+    while uci get wireless.@wifi-iface[$i] >/dev/null 2>&1; do
+        local ssid=$(uci -q get wireless.@wifi-iface[$i].ssid)
+        [ -z "$ssid" ] && ssid="iface$i"
+        local safe_ssid=$(escape_html "$ssid")
+        [ $col -gt 0 ] && row="${row},"
+        row="${row}{\"text\":\"${safe_ssid}\",\"callback_data\":\"w_se_i_${i}\"}"
+        col=$((col+1))
+        if [ $col -eq 2 ]; then kb="${kb}${row}],"; row="["; col=0; fi
+        i=$((i+1))
+    done
+    if [ $col -gt 0 ]; then kb="${kb}${row}],"; fi
+    kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    send_keyboard_menu "Select Interface for Changing Security:" "$chat_id" "$kb"
+}
+wifi_show_channels() {
+    local r="$1"
+    local chat_id="$2"
+    local band=$(uci -q get wireless.$r.band)
+    local hw=$(uci -q get wireless.$r.hwmode)
+    local cur=$(uci -q get wireless.$r.channel)
+    local opts="auto 1 2 3 4 5 6 7 8 9 10 11 12 13"
+    if [ "$band" = "5g" ] || [ "$hw" = "11a" ] || [ "$hw" = "11ac" ] || [ "$hw" = "11ax" ]; then
+        opts="auto 36 40 44 48 149 153 157 161"
+    fi
+    local kb="["
+    local row="["
+    local col=0
+    for opt in $opts; do
+        local lbl="$opt"
+        [ "$opt" = "$cur" ] && lbl="✔ $opt"
+        [ "$opt" = "auto" ] && lbl=$( [ "$opt" = "$cur" ] && echo "✔ Auto" || echo "Auto" )
+        [ $col -gt 0 ] && row="${row},"
+        row="${row}{\"text\":\"${lbl}\",\"callback_data\":\"w_ch_v_${r}_${opt}\"}"
+        col=$((col+1))
+        if [ $col -eq 3 ]; then kb="${kb}${row}],"; row="["; col=0; fi
+    done
+    if [ $col -gt 0 ]; then kb="${kb}${row}],"; fi
+    kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"w_ch_sel\"}]]"
+    send_keyboard_menu "Select Channel for <b>${r}</b>:" "$chat_id" "$kb"
+}
+wifi_show_modes() {
+    local r="$1"
+    local chat_id="$2"
+    local cur=$(uci -q get wireless.$r.htmode)
+    local opts="HT20 HT40 VHT20 VHT40 VHT80 VHT160 HE20 HE40 HE80 HE160"
+    local kb="["
+    local row="["
+    local col=0
+    for opt in $opts; do
+        local lbl="$opt"
+        [ "$opt" = "$cur" ] && lbl="✔ $opt"
+        [ $col -gt 0 ] && row="${row},"
+        row="${row}{\"text\":\"${lbl}\",\"callback_data\":\"w_mo_v_${r}_${opt}\"}"
+        col=$((col+1))
+        if [ $col -eq 3 ]; then kb="${kb}${row}],"; row="["; col=0; fi
+    done
+    if [ $col -gt 0 ]; then kb="${kb}${row}],"; fi
+    kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"w_mo_sel\"}]]"
+    send_keyboard_menu "Select HT Mode for <b>${r}</b>:" "$chat_id" "$kb"
+}
+wifi_show_sec() {
+    local i="$1"
+    local chat_id="$2"
+    local cur=$(uci -q get wireless.@wifi-iface[$i].encryption)
+    local keys="none psk2 psk-mixed sae sae-mixed"
+    local labels="NONE WPA2 WPA/WPA2 WPA3 WPA2/WPA3"
+    local kb="["
+    local row="["
+    local col=0
+    local idx=1
+    for opt in $keys; do
+        local lbl=$(echo "$labels" | cut -d' ' -f$idx)
+        [ "$opt" = "$cur" ] && lbl="✔ $lbl"
+        [ $col -gt 0 ] && row="${row},"
+        row="${row}{\"text\":\"${lbl}\",\"callback_data\":\"w_se_v_${i}_${opt}\"}"
+        col=$((col+1))
+        if [ $col -eq 2 ]; then kb="${kb}${row}],"; row="["; col=0; fi
+        idx=$((idx+1))
+    done
+    if [ $col -gt 0 ]; then kb="${kb}${row}],"; fi
+    kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"w_se_sel\"}]]"
+    local ssid=$(uci -q get wireless.@wifi-iface[$i].ssid)
+    local safe_ssid=$(escape_html "$ssid")
+    send_keyboard_menu "Select Security Mode for <b>${safe_ssid}</b>:" "$chat_id" "$kb"
+}
+wifi_view_pass() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    local i=0
+    local out=""
+    while uci get wireless.@wifi-iface[$i] >/dev/null 2>&1; do
+        local ssid=$(uci -q get wireless.@wifi-iface[$i].ssid)
+        local key=$(uci -q get wireless.@wifi-iface[$i].key)
+        [ -n "$ssid" ] && out="${out}SSID: ${ssid}\nPass: <span class=\"tg-spoiler\">${key:-None}</span>\n\n"
+        i=$((i+1))
+    done
+    [ -z "$out" ] && out="✘ No WiFi interfaces found."
+    send_keyboard_menu "WiFi Passwords:\n\n$out" "$chat_id" "$kb"
+}
+show_wifi_sched_menu() {
+    local chat_id="$1"
+    local kb=$(build_keyboard WIFI_SCHED_MENU 3 false)
+    kb="${kb:0:-1},[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    local cron_on=$(grep "wifi up" /etc/crontabs/root 2>/dev/null | awk '{print $1" "$2" "$3" "$4" "$5}')
+    local cron_off=$(grep "wifi down" /etc/crontabs/root 2>/dev/null | awk '{print $1" "$2" "$3" "$4" "$5}')
+    local msg="WiFi Schedule\n\nAuto ON: ${cron_on:-None}\nAuto OFF: ${cron_off:-None}\n\nSelect action:"
+    send_keyboard_menu "$msg" "$chat_id" "$kb"
+}
+view_wifi_users() {
+    local chat_id="$1"
+    local out="Connected Devices:\n"
+    local count=0
+    if command -v iw >/dev/null 2>&1; then
+        for iface in $(iw dev 2>/dev/null | awk '$1=="Interface"{print $2}'); do
+            local stations=$(iw dev "$iface" station dump 2>/dev/null)
+            if [ -n "$stations" ]; then
+                local macs=$(echo "$stations" | grep "^Station" | awk '{print $2}')
+                for mac in $macs; do
+                    local st_data=$(echo "$stations" | awk -v m="$mac" '$0 ~ "Station " m {f=1; next} f && $0 ~ "Station" {f=0} f')
+                    local rx=$(echo "$st_data" | grep "rx bytes:" | awk '{print $3}')
+                    local tx=$(echo "$st_data" | grep "tx bytes:" | awk '{print $3}')
+                    local ctime=$(echo "$st_data" | grep "connected time:" | awk '{print $3}')
+                    [ -z "$rx" ] && rx=0
+                    [ -z "$tx" ] && tx=0
+                    [ -z "$ctime" ] && ctime=0
+                    local total_mb=$(awk -v r="$rx" -v t="$tx" 'BEGIN {printf "%.2f", (r+t)/1048576}')
+                    local h_time=$((ctime / 3600))
+                    local m_time=$(((ctime % 3600) / 60))
+                    local s_time=$((ctime % 60))
+                    local uptime_str=$(printf "%02d:%02d:%02d" $h_time $m_time $s_time)
+                    local hostname=$(awk -v m="$(echo "$mac" | tr 'A-Z' 'a-z')" 'tolower($2)==m {print $4; exit}' /tmp/dhcp.leases 2>/dev/null)
+                    [ -z "$hostname" ] || [ "$hostname" = "*" ] && hostname="Unknown"
+                    hostname=$(escape_html "$hostname")
+                    out="${out}\n- ${hostname} (${mac})\n  Time: ${uptime_str} | Data: ${total_mb} MB"
+                    count=$((count+1))
+                done
+            fi
+        done
+    fi
+    if [ "$count" -eq 0 ]; then
+        if [ -f "/tmp/dhcp.leases" ]; then
+            local users=$(awk '{print "- " $3 " - " ($4 == "*" ? "Unknown" : $4)}' /tmp/dhcp.leases)
+            local cnt=$(wc -l < /tmp/dhcp.leases)
+            if [ "$cnt" -gt 0 ]; then
+                users=$(escape_html "$users")
+                out="DHCP Leases (iw fallback):\n<pre>$users</pre>"
+            else
+                out="No connected devices found."
+            fi
+        else
+            out="No connected devices found."
+        fi
+    fi
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    send_keyboard_menu "$out" "$chat_id" "$kb"
+}
+wifi_manage_users() {
+    local chat_id="$1"
+    local kb="["
+    local col_count=0
+    local total=0
+    local row="["
+    if [ -f "/tmp/dhcp.leases" ]; then
+        while read -r expire mac ip hostname rest; do
+            [ "$hostname" = "*" ] && hostname="$ip"
+            local m_clean="${mac//:/}"
+            local is_blocked=$(uci show firewall 2>/dev/null | grep -c "blk_${m_clean}=rule")
+            if [ "$is_blocked" -eq 0 ]; then
+                local clean_host=$(escape_html "${hostname:0:15}")
+                [ $col_count -gt 0 ] && row="${row},"
+                row="${row}{\"text\":\"✘ Block ${clean_host}\",\"callback_data\":\"blk_${mac}\"}"
+                col_count=$((col_count+1))
+                total=$((total+1))
+                if [ $col_count -eq 3 ]; then
+                    kb="${kb}${row}],"
+                    row="["
+                    col_count=0
+                fi
+            fi
+        done < "/tmp/dhcp.leases"
+    fi
+    if [ "$total" -eq 0 ]; then 
+        local b_kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+        send_keyboard_menu "No active unblocked users found." "$chat_id" "$b_kb"
+        return
+    fi
+    if [ $col_count -gt 0 ]; then kb="${kb}${row}],"; fi
+    kb="${kb}[{\"text\":\"✘ Block All\",\"callback_data\":\"blk_all\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    send_keyboard_menu "Connected Users\nSelect to block:" "$chat_id" "$kb"
+}
+wifi_blocked_list() {
+    local chat_id="$1"
+    local kb="["
+    local col_count=0
+    local total=0
+    local row="["
+    local rules=$(uci show firewall 2>/dev/null | grep "=rule" | grep "\.blk_" | cut -d. -f2 | cut -d= -f1)
+    for r in $rules; do
+        local m_mac=$(uci get firewall.$r.src_mac 2>/dev/null | sed 's/ /\n/g' | head -1)
+        if [ -n "$m_mac" ]; then
+            [ $col_count -gt 0 ] && row="${row},"
+            row="${row}{\"text\":\"✔ Unblock ${m_mac}\",\"callback_data\":\"unb_${m_mac}\"}"
+            col_count=$((col_count+1))
+            total=$((total+1))
+            if [ $col_count -eq 3 ]; then
+                kb="${kb}${row}],"
+                row="["
+                col_count=0
+            fi
+        fi
+    done
+    if [ "$total" -eq 0 ]; then
+        local b_kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+        send_keyboard_menu "No blocked users found." "$chat_id" "$b_kb"
+        return
+    fi
+    if [ $col_count -gt 0 ]; then kb="${kb}${row}],"; fi
+    kb="${kb}[{\"text\":\"✔ Unblock All\",\"callback_data\":\"unb_all\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    send_keyboard_menu "Blocked Users\nSelect to unblock:" "$chat_id" "$kb"
+}
+block_mac() {
+    local chat_id="$1"
+    local mac="$2"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    send_keyboard_menu "Blocking MAC $mac..." "$chat_id" "$kb"
+    local m_clean="${mac//:/}"
+    uci set firewall.blk_$m_clean=rule
+    uci set firewall.blk_$m_clean.name="Block_$m_clean"
+    uci set firewall.blk_$m_clean.src="lan"
+    uci set firewall.blk_$m_clean.dest="wan"
+    uci add_list firewall.blk_$m_clean.src_mac="$mac"
+    uci set firewall.blk_$m_clean.target="REJECT"
+    uci commit firewall
+    /etc/init.d/firewall restart >/dev/null 2>&1
+    local i=0
+    while uci get wireless.@wifi-iface[$i] >/dev/null 2>&1; do
+        local filter=$(uci -q get wireless.@wifi-iface[$i].macfilter)
+        if [ "$filter" = "allow" ]; then
+            uci del_list wireless.@wifi-iface[$i].maclist="$mac"
+        else
+            uci set wireless.@wifi-iface[$i].macfilter='deny'
+            uci add_list wireless.@wifi-iface[$i].maclist="$mac"
+        fi
+        i=$((i+1))
+    done
+    uci commit wireless
+    wifi reload >/dev/null 2>&1 &
+    send_keyboard_menu "✔ MAC $mac blocked (Firewall & Wireless)." "$chat_id" "$kb"
+}
+unblock_mac() {
+    local chat_id="$1"
+    local mac="$2"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    send_keyboard_menu "Unblocking MAC $mac..." "$chat_id" "$kb"
+    local m_clean="${mac//:/}"
+    uci delete firewall.blk_$m_clean
+    uci commit firewall
+    /etc/init.d/firewall restart >/dev/null 2>&1
+    local i=0
+    while uci get wireless.@wifi-iface[$i] >/dev/null 2>&1; do
+        local filter=$(uci -q get wireless.@wifi-iface[$i].macfilter)
+        if [ "$filter" = "allow" ]; then
+            uci add_list wireless.@wifi-iface[$i].maclist="$mac"
+        else
+            uci del_list wireless.@wifi-iface[$i].maclist="$mac"
+        fi
+        i=$((i+1))
+    done
+    uci commit wireless
+    wifi reload >/dev/null 2>&1 &
+    send_keyboard_menu "✔ MAC $mac unblocked." "$chat_id" "$kb"
+}
+block_all_mac() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    send_keyboard_menu "Blocking all connected users..." "$chat_id" "$kb"
+    local count=0
+    if [ -f "/tmp/dhcp.leases" ]; then
+        while read -r expire mac ip hostname rest; do
+            local m_clean="${mac//:/}"
+            local is_blocked=$(uci show firewall 2>/dev/null | grep -c "blk_${m_clean}=rule")
+            if [ "$is_blocked" -eq 0 ]; then
+                uci set firewall.blk_$m_clean=rule
+                uci set firewall.blk_$m_clean.name="Block_$m_clean"
+                uci set firewall.blk_$m_clean.src="lan"
+                uci set firewall.blk_$m_clean.dest="wan"
+                uci add_list firewall.blk_$m_clean.src_mac="$mac"
+                uci set firewall.blk_$m_clean.target="REJECT"
+                local i=0
+                while uci get wireless.@wifi-iface[$i] >/dev/null 2>&1; do
+                    local filter=$(uci -q get wireless.@wifi-iface[$i].macfilter)
+                    if [ "$filter" = "allow" ]; then
+                        uci del_list wireless.@wifi-iface[$i].maclist="$mac"
+                    else
+                        uci set wireless.@wifi-iface[$i].macfilter='deny'
+                        uci add_list wireless.@wifi-iface[$i].maclist="$mac"
+                    fi
+                    i=$((i+1))
+                done
+                count=$((count+1))
+            fi
+        done < "/tmp/dhcp.leases"
+    fi
+    if [ "$count" -gt 0 ]; then
+        uci commit firewall
+        uci commit wireless
+        /etc/init.d/firewall restart >/dev/null 2>&1
+        wifi reload >/dev/null 2>&1 &
+        send_keyboard_menu "✔ Blocked $count devices (Firewall & Wireless)." "$chat_id" "$kb"
+    else
+        send_keyboard_menu "No active devices to block." "$chat_id" "$kb"
+    fi
+}
+unblock_all_mac() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"wifi_menu\"}]]"
+    send_keyboard_menu "Unblocking all users..." "$chat_id" "$kb"
+    local rules=$(uci show firewall 2>/dev/null | grep "=rule" | grep "\.blk_" | cut -d. -f2 | cut -d= -f1)
+    local count=0
+    for r in $rules; do
+        local m_mac=$(uci get firewall.$r.src_mac 2>/dev/null | sed 's/ /\n/g' | head -1)
+        if [ -n "$m_mac" ]; then
+            uci delete firewall.$r
+            local i=0
+            while uci get wireless.@wifi-iface[$i] >/dev/null 2>&1; do
+                local filter=$(uci -q get wireless.@wifi-iface[$i].macfilter)
+                if [ "$filter" = "allow" ]; then
+                    uci add_list wireless.@wifi-iface[$i].maclist="$m_mac"
+                else
+                    uci del_list wireless.@wifi-iface[$i].maclist="$m_mac"
+                fi
+                i=$((i+1))
+            done
+            count=$((count+1))
+        fi
+    done
+    if [ "$count" -gt 0 ]; then
+        uci commit firewall
+        uci commit wireless
+        /etc/init.d/firewall restart >/dev/null 2>&1
+        wifi reload >/dev/null 2>&1 &
+        send_keyboard_menu "✔ Unblocked $count devices." "$chat_id" "$kb"
+    else
+        send_keyboard_menu "No blocked devices found." "$chat_id" "$kb"
+    fi
+}
+show_network_menu() {
+    local chat_id="$1"
+    local keyboard=$(build_keyboard NETWORK_MENU 3 true)
+    send_keyboard_menu "Network Tools" "$chat_id" "$keyboard"
+}
+show_modem_menu() {
+    local chat_id="$1"
+    local keyboard=$(build_keyboard MODEM_MENU 3 true)
+    send_keyboard_menu "Modem Control" "$chat_id" "$keyboard"
+}
+show_vnstat_menu() {
+    local chat_id="$1"
+    local keyboard=$(build_keyboard VNSTAT_MENU 3 true)
+    send_keyboard_menu "Network Statistics" "$chat_id" "$keyboard"
+}
+get_system_status() {
+    local chat_id="$1"
+    local uptime=$(uptime_str)
+    local model="XIDZsOS"
+    if [ -f /tmp/sysinfo/model ]; then local file_model=$(cat /tmp/sysinfo/model); if [ -n "$file_model" ] && [ "$file_model" != "" ]; then model="$file_model"; fi; fi
+    local arch=$(awk '/CPU architecture/{print "ARMv"$3; exit}' /proc/cpuinfo 2>/dev/null)
+    [ -z "$arch" ] && arch=$(uname -m)
+    local freq=$(get_cpu_freq)
+    local temp=$(get_cpu_temp)
+    local arch_info="$arch"
+    [ -n "$freq" ] && arch_info="$arch_info | $freq"
+    [ -n "$temp" ] && arch_info="$arch_info | $temp"
+    local mem_info=$(awk '/^MemTotal:/{t=$2} /^MemFree:/{f=$2} /^Buffers:/{b=$2} /^Cached:/{c=$2} END { used = t - f - b - c; free = f + b + c; printf "Total: %.0fMB | Used: %.0fMB | Free: %.0fMB", t/1024, used/1024, free/1024 }' /proc/meminfo)
+    local load=$(awk '{print $1", "$2", "$3}' /proc/loadavg)
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]]"
+    send_keyboard_menu "System Status\n\nModel: ${model}\nArch: ${arch_info}\nUptime: ${uptime}\nMemory: ${mem_info}\nLoad: ${load}" "$chat_id" "$kb"
+}
+check_internet() {
+    local chat_id="$1"
+    local gateway=$(ip route | awk '/default/{print $3; exit}')
+    local gw_res="✘"
+    local dns_res="✘"
+    if [ -n "$gateway" ]; then
+        local gw_p=$(ping -c 1 -W 3 "$gateway" 2>/dev/null | grep 'time=' | sed -n 's/.*time=\([0-9.]*\).*/\1/p')
+        if [ -n "$gw_p" ]; then gw_res="✔ (${gw_p}ms)"; fi
+    fi
+    local dns_p=$(ping -c 1 -W 3 "8.8.8.8" 2>/dev/null | grep 'time=' | sed -n 's/.*time=\([0-9.]*\).*/\1/p')
+    if [ -n "$dns_p" ]; then dns_res="✔ (${dns_p}ms)"; fi
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"network_menu\"}]]"
+    send_keyboard_menu "Internet Test\nGateway: $gw_res\nDNS: $dns_res" "$chat_id" "$kb"
+}
+run_speedtest() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"network_menu\"}]]"
+    send_keyboard_menu "Running speedtest..." "$chat_id" "$kb"
+    local out
+    local success=0
+    out=$(speedtest --accept-license 2>&1) && success=1
+    out=$(escape_html "$out")
+    if [ "$success" -eq 1 ]; then
+        send_keyboard_menu "Speedtest Result:\n<pre>$out</pre>" "$chat_id" "$kb"
+    else
+        send_keyboard_menu "✘ Speedtest error or not installed." "$chat_id" "$kb"
+    fi
+}
+list_dhcp() {
+    local chat_id="$1"
+    local dhcp_file="/tmp/dhcp.leases"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"network_menu\"}]]"
+    if [ -s "$dhcp_file" ]; then
+        local dhcp=$(awk -v now="$(date +%s)" '{ expire=$1; mac=$2; ip=$3; host=($4=="*"||$4=="")?"Unknown":$4; if(expire=="0"||expire>now+86400){rem="Static"}else if(expire>now){diff=expire-now; rem=int(diff/3600)"h"int((diff%3600)/60)"m"}else{rem="Exp"}; print ip" - "host" ("mac") ["rem"]" }' "$dhcp_file")
+        local count=$(wc -l < "$dhcp_file")
+        dhcp=$(escape_html "$dhcp")
+        send_keyboard_menu "DHCP List ($count)\n<pre>$dhcp</pre>" "$chat_id" "$kb"
+    else
+        send_keyboard_menu "✘ No DHCP found." "$chat_id" "$kb"
+    fi
+}
+restart_firewall() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"network_menu\"}]]"
+    if [ -f "/etc/init.d/firewall" ]; then 
+        send_keyboard_menu "Restarting Firewall..." "$chat_id" "$kb"
+        /etc/init.d/firewall restart >/dev/null 2>&1
+        send_keyboard_menu "✔ Firewall Restarted." "$chat_id" "$kb"
+    fi
+}
+get_interface_list() {
+    ls -1 /sys/class/net/ 2>/dev/null | grep -vE '^(lo|ifb|teql|erspan|gre|ip_vti|ip6|sit)' | xargs
+}
+get_uci_interface_name() {
+    local phy="$1"
+    local uci_name=$(uci show network 2>/dev/null | grep -w "device='$phy'" | head -1 | cut -d'.' -f2 | cut -d'.' -f1)
+    [ -z "$uci_name" ] && uci_name=$(uci show network 2>/dev/null | grep -w "ifname='$phy'" | head -1 | cut -d'.' -f2 | cut -d'.' -f1)
+    [ -z "$uci_name" ] && uci_name=$(uci show network 2>/dev/null | grep -w "proto='qmi'" | head -1 | cut -d'.' -f2 | cut -d'.' -f1)
+    if [ -z "$uci_name" ]; then case "$phy" in usb*) echo "wwan";; eth*) echo "wan";; wwan*) echo "wwan";; *) echo "$phy";; esac; else echo "$uci_name"; fi
+}
+get_interface_status() {
+    local iface="$1"
+    local ip=$(ip addr show $iface 2>/dev/null | grep "inet " | awk '{print $2}' | cut -d'/' -f1 | head -1 || echo "No IP")
+    local state=$(cat /sys/class/net/$iface/operstate 2>/dev/null || echo "unknown")
+    local carrier=$(cat /sys/class/net/$iface/carrier 2>/dev/null || echo "0")
+    local status="✘ Down"
+    if [ "$state" = "up" ] && [ "$carrier" = "1" ]; then status="✔ Up"; elif [ "$state" = "up" ]; then status="✘ No Carrier"; fi
+    
+    local rx_bytes=$(cat /sys/class/net/$iface/statistics/rx_bytes 2>/dev/null || echo 0)
+    local tx_bytes=$(cat /sys/class/net/$iface/statistics/tx_bytes 2>/dev/null || echo 0)
+    local total_bytes=$((rx_bytes + tx_bytes))
+    local usage="0 MB"
+    if [ "$total_bytes" -gt 1073741824 ]; then
+        usage=$(awk "BEGIN {printf \"%.2f GB\", $total_bytes/1073741824}")
+    else
+        usage=$(awk "BEGIN {printf \"%.2f MB\", $total_bytes/1048576}")
+    fi
+    
+    local uci_name=$(get_uci_interface_name "$iface")
+    local up_sec=$(ubus call network.interface.$uci_name status 2>/dev/null | grep '"uptime"' | grep -o '[0-9]*')
+    local up_str="N/A"
+    if [ -n "$up_sec" ] && [ "$up_sec" -gt 0 ]; then
+        local d=$((up_sec/86400))
+        local h=$((up_sec%86400/3600))
+        local m=$((up_sec%3600/60))
+        local s=$((up_sec%60))
+        if [ $d -gt 0 ]; then up_str="${d}d ${h}h ${m}m"; else up_str="${h}h ${m}m ${s}s"; fi
+    fi
+    
+    echo "${ip}|${status}|${usage}|${up_str}"
+}
+show_interface_menu() {
+    local chat_id="$1"
+    local interface=$(get_interface_list)
+    if [ -z "$interface" ]; then 
+        local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"network_menu\"}]]"
+        send_keyboard_menu "✘ No interface found" "$chat_id" "$kb"
+        return
+    fi
+    local iface_list=""
+    declare -A DYN_IF
+    for iface in $interface; do
+        local stat=$(get_interface_status "$iface")
+        local ip=$(echo "$stat" | cut -d'|' -f1)
+        local st=$(echo "$stat" | cut -d'|' -f2)
+        local usg=$(echo "$stat" | cut -d'|' -f3)
+        local upt=$(echo "$stat" | cut -d'|' -f4)
+        iface_list="${iface_list}\n- ${iface}: ${ip} [${st}]\n  Data: ${usg} | Uptime: ${upt}\n"
+        DYN_IF["$iface"]="iface_select_${iface}"
+    done
+    local keyboard=$(build_keyboard DYN_IF 3 false)
+    keyboard="${keyboard:0:-1},[{\"text\":\"✔ Add Interface\",\"callback_data\":\"iface_add\"},{\"text\":\"✘ Remove Interface\",\"callback_data\":\"iface_rm_menu\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"network_menu\"}]]"
+    send_keyboard_menu "Interfaces${iface_list}\nSelect interface:" "$chat_id" "$keyboard"
+}
+show_interface_action_menu() {
+    local interface="$1"
+    local chat_id="$2"
+    local stat=$(get_interface_status "$interface" | cut -d'|' -f2)
+    declare -A DYN_ACT
+    for action in "${!INTERFACE_ACTIONS[@]}"; do DYN_ACT["$action"]="${INTERFACE_ACTIONS[$action]}_${interface}"; done
+    local keyboard=$(build_keyboard DYN_ACT 3 false)
+    keyboard="${keyboard:0:-1},[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"interface\"}]]"
+    send_keyboard_menu "Interface: ${interface}\nStatus: ${stat}\n\nSelect action:" "$chat_id" "$keyboard"
+}
+restart_interface() {
+    local phy="$1"
+    local chat_id="$2"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"interface\"}]]"
+    send_keyboard_menu "Restarting Interface $phy..." "$chat_id" "$kb"
+    local uci=$(get_uci_interface_name "$phy")
+    ifdown "$uci" >/dev/null 2>&1; sleep 2; ifup "$uci" >/dev/null 2>&1; sleep 3
+    send_keyboard_menu "✔ Interface $phy restarted." "$chat_id" "$kb"
+}
+reload_interface() {
+    local phy="$1"
+    local chat_id="$2"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"interface\"}]]"
+    send_keyboard_menu "Reloading Interface $phy..." "$chat_id" "$kb"
+    local uci=$(get_uci_interface_name "$phy")
+    ifup "$uci" >/dev/null 2>&1; sleep 2
+    send_keyboard_menu "✔ Interface $phy reloaded." "$chat_id" "$kb"
+}
+interface_down() {
+    local phy="$1"
+    local chat_id="$2"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"interface\"}]]"
+    send_keyboard_menu "Stopping Interface $phy..." "$chat_id" "$kb"
+    local uci=$(get_uci_interface_name "$phy")
+    ifdown "$uci" >/dev/null 2>&1; sleep 2
+    send_keyboard_menu "✔ Interface $phy down." "$chat_id" "$kb"
+}
+interface_up() {
+    local phy="$1"
+    local chat_id="$2"
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"interface\"}]]"
+    send_keyboard_menu "Starting Interface $phy..." "$chat_id" "$kb"
+    local uci=$(get_uci_interface_name "$phy")
+    ifup "$uci" >/dev/null 2>&1; sleep 3
+    send_keyboard_menu "✔ Interface $phy up." "$chat_id" "$kb"
+}
+get_wwan_interface() {
+    local w=""
+    for i in /sys/class/net/wwan*; do if [ -e "$i" ]; then w=$(basename "$i"); break; fi; done
+    [ -z "$w" ] && w=$(uci show network 2>/dev/null | grep "proto='qmi'\|proto='mbim'" | head -1 | cut -d'.' -f2 || echo "")
+    echo "$w"
+}
+check_tunnel_installed() { opkg list-installed | grep -q "$(echo "${TUNNEL_SERVICES[$1]}" | cut -d':' -f1)" && return 0 || return 1; }
+show_tunnel_menu() {
+    local chat_id="$1"
+    local tunnels=""
+    for t in "${!TUNNEL_SERVICES[@]}"; do if check_tunnel_installed "$t"; then tunnels="$tunnels $t"; fi; done
+    if [ -z "$tunnels" ]; then 
+        local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]]"
+        send_keyboard_menu "✘ No tunnel services." "$chat_id" "$kb"
+        return
+    fi
+    declare -A DYN_TUN
+    for t in $tunnels; do DYN_TUN["$t"]="tunnel_select_$(echo "$t" | tr '[:upper:]' '[:lower:]')"; done
+    local keyboard=$(build_keyboard DYN_TUN 3 true)
+    send_keyboard_menu "Tunnel Services" "$chat_id" "$keyboard"
+}
+show_tunnel_action_menu() {
+    local svc="$1"
+    local chat_id="$2"
+    declare -A DYN_ACT
+    for action in "${!TUNNEL_ACTIONS[@]}"; do DYN_ACT["$action"]="${TUNNEL_ACTIONS[$action]}_${svc}"; done
+    local keyboard=$(build_keyboard DYN_ACT 3 false)
+    keyboard="${keyboard:0:-1},[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tunnel_menu\"}]]"
+    send_keyboard_menu "${svc} Control" "$chat_id" "$keyboard"
+}
+tunnel_service_action() {
+    local act="$1"
+    local svc="$2"
+    local chat_id="$3"
+    local t=""
+    for k in "${!TUNNEL_SERVICES[@]}"; do if [ "$(echo "$k" | tr '[:upper:]' '[:lower:]')" = "$svc" ]; then t="$k"; break; fi; done
+    local s_name=$(echo "${TUNNEL_SERVICES[$t]}" | cut -d':' -f2)
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tunnel_menu\"}]]"
+    if [ ! -f "/etc/init.d/$s_name" ]; then send_keyboard_menu "✘ ${t} not found" "$chat_id" "$kb"; return; fi
+    if [ "$act" = "status" ]; then
+        local st="✘ Stopped"
+        if /etc/init.d/$s_name status 2>/dev/null | grep -q -E "running|active"; then st="✔ Running"; fi
+        send_keyboard_menu "${t} Status: ${st}" "$chat_id" "$kb"
+    else
+        send_keyboard_menu "${act}ing ${t}..." "$chat_id" "$kb"
+        /etc/init.d/$s_name $act >/dev/null 2>&1
+        send_keyboard_menu "✔ ${t} ${act}ed." "$chat_id" "$kb"
+    fi
+}
+tunnel_api_call() {
+    local svc="$1"
+    local endpoint="$2"
+    local method="${3:-GET}"
+    local data="$4"
+    local secret=$(cat /etc/xidzs_api_secret_${svc}.txt 2>/dev/null)
+    
+    if [ -n "$secret" ] && [ -n "$data" ]; then
+        curl -s -m 2 -X "$method" -H "Authorization: Bearer $secret" -H "Content-Type: application/json" -d "$data" "http://127.0.0.1:9090${endpoint}"
+    elif [ -n "$secret" ]; then
+        curl -s -m 2 -X "$method" -H "Authorization: Bearer $secret" "http://127.0.0.1:9090${endpoint}"
+    elif [ -n "$data" ]; then
+        curl -s -m 2 -X "$method" -H "Content-Type: application/json" -d "$data" "http://127.0.0.1:9090${endpoint}"
+    else
+        curl -s -m 2 -X "$method" "http://127.0.0.1:9090${endpoint}"
+    fi
+}
+show_tunnel_dashboard() {
+    local svc="$1"
+    local chat_id="$2"
+    local state_file="$3"
+    
+    local out=$(tunnel_api_call "$svc" "/configs")
+    
+    if [ -z "$out" ]; then
+        local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tunnel_select_${svc}\"}]]"
+        send_keyboard_menu "✘ API not responding (Port 9090).\nEnsure $svc is running." "$chat_id" "$kb"
+        return
+    fi
+    
+    if [[ "$out" == *"Unauthorized"* || "$out" == *"Invalid"* ]]; then
+        local kb="[[{\"text\":\"Set Auth Secret\",\"callback_data\":\"tunnel_set_auth_${svc}\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tunnel_select_${svc}\"}]]"
+        send_keyboard_menu "🔒 API requires Authentication.\nSecret is missing or invalid." "$chat_id" "$kb"
+        return
+    fi
+    
+    local mode="Unknown"
+    [[ "$out" =~ \"mode\":\"([^\"]+)\" ]] && mode="${BASH_REMATCH[1]}"
+    mode=$(echo "$mode" | tr '[:lower:]' '[:upper:]')
+    
+    local kb="[[{\"text\":\"Direct\",\"callback_data\":\"tunnel_mode_direct_${svc}\"},{\"text\":\"Rule\",\"callback_data\":\"tunnel_mode_rule_${svc}\"},{\"text\":\"Global\",\"callback_data\":\"tunnel_mode_global_${svc}\"}],[{\"text\":\"🔀 Proxy Groups\",\"callback_data\":\"t_pg_${svc}_1\"}],[{\"text\":\"Set Auth\",\"callback_data\":\"tunnel_set_auth_${svc}\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tunnel_select_${svc}\"}]]"
+    send_keyboard_menu "Dashboard API ($svc)\nPort: 9090 | Mode: <b>${mode}</b>\n\nSelect routing mode or configure proxies:" "$chat_id" "$kb"
+}
+change_tunnel_mode() {
+    local mode="$1"
+    local svc="$2"
+    local chat_id="$3"
+    
+    tunnel_api_call "$svc" "/configs" "PATCH" "{\"mode\":\"$mode\"}" >/dev/null 2>&1 &
+    
+    local mode_up=$(echo "$mode" | tr '[:lower:]' '[:upper:]')
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back to Dashboard\",\"callback_data\":\"tunnel_dash_${svc}\"}]]"
+    send_keyboard_menu "✔ API Mode changed to: <b>${mode_up}</b>" "$chat_id" "$kb"
+}
+tunnel_show_groups() {
+    local svc="$1"
+    local page="$2"
+    local chat_id="$3"
+    local list_file="/tmp/xidz_tg_${chat_id}.txt"
+    
+    if [ "$page" -eq 1 ]; then
+        tunnel_api_call "$svc" "/proxies" | jq -r '.proxies | to_entries[] | select(.value.type=="Selector" or .value.type=="Fallback" or .value.type=="URLTest") | .key' > "$list_file"
+    fi
+    
+    if [ ! -s "$list_file" ]; then
+        local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tunnel_dash_${svc}\"}]]"
+        send_keyboard_menu "✘ No Proxy Groups found." "$chat_id" "$kb"
+        return
+    fi
+    
+    local total=$(wc -l < "$list_file")
+    local limit=9
+    local total_pages=$(( (total + limit - 1) / limit ))
+    [ "$total_pages" -eq 0 ] && total_pages=1
+    [ "$page" -lt 1 ] && page=1
+    [ "$page" -gt "$total_pages" ] && page="$total_pages"
+    
+    local start=$(( (page - 1) * limit + 1 ))
+    local end=$(( page * limit ))
+    
+    local kb="["
+    local row="["
+    local col=0
+    local i=$start
+    while [ $i -le $end ] && [ $i -le $total ]; do
+        local gname=$(sed -n "${i}p" "$list_file")
+        local safe_name=$(escape_html "$gname")
+        [ $col -gt 0 ] && row="${row},"
+        row="${row}{\"text\":\"${safe_name}\",\"callback_data\":\"t_g_${svc}_${i}\"}"
+        col=$((col + 1))
+        if [ $col -eq 3 ]; then
+            kb="${kb}${row}],"
+            row="["
+            col=0
+        fi
+        i=$((i + 1))
+    done
+    if [ $col -gt 0 ]; then kb="${kb}${row}],"; fi
+    
+    local nav="["
+    if [ "$page" -gt 1 ]; then
+        nav="${nav}{\"text\":\"⬅ Prev\",\"callback_data\":\"t_pg_${svc}_$((page - 1))\"},"
+    fi
+    nav="${nav}{\"text\":\"$page / $total_pages\",\"callback_data\":\"ignore\"}"
+    if [ "$page" -lt "$total_pages" ]; then
+        nav="${nav},{\"text\":\"Next ➔\",\"callback_data\":\"t_pg_${svc}_$((page + 1))\"}"
+    fi
+    nav="${nav}]"
+    kb="${kb}${nav},[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back to Dashboard\",\"callback_data\":\"tunnel_dash_${svc}\"}]]"
+    
+    send_keyboard_menu "🔀 <b>Proxy Groups ($svc)</b>\nSelect a group to configure:" "$chat_id" "$kb"
+}
+tunnel_show_proxies() {
+    local svc="$1"
+    local g_idx="$2"
+    local page="$3"
+    local chat_id="$4"
+    local group_list="/tmp/xidz_tg_${chat_id}.txt"
+    local proxy_list="/tmp/xidz_tp_${chat_id}.txt"
+    local cur_group_file="/tmp/xidz_cg_${chat_id}.txt"
+    
+    local gname=""
+    if [ -n "$g_idx" ]; then
+        gname=$(sed -n "${g_idx}p" "$group_list")
+        echo "$gname" > "$cur_group_file"
+        local json=$(tunnel_api_call "$svc" "/proxies")
+        echo "$json" | jq -r --arg g "$gname" '.proxies[$g].all[]?' > "$proxy_list"
+    else
+        gname=$(cat "$cur_group_file")
+    fi
+    
+    local current_proxy=$(tunnel_api_call "$svc" "/proxies" | jq -r --arg g "$gname" '.proxies[$g].now?')
+    
+    local total=$(wc -l < "$proxy_list")
+    local limit=9
+    local total_pages=$(( (total + limit - 1) / limit ))
+    [ "$total_pages" -eq 0 ] && total_pages=1
+    [ "$page" -lt 1 ] && page=1
+    [ "$page" -gt "$total_pages" ] && page="$total_pages"
+    
+    local start=$(( (page - 1) * limit + 1 ))
+    local end=$(( page * limit ))
+    
+    local kb="["
+    local row="["
+    local col=0
+    local i=$start
+    while [ $i -le $end ] && [ $i -le $total ]; do
+        local pname=$(sed -n "${i}p" "$proxy_list")
+        local mark=""
+        [ "$pname" = "$current_proxy" ] && mark="✔ "
+        local safe_name=$(escape_html "${mark}${pname}")
+        
+        [ $col -gt 0 ] && row="${row},"
+        row="${row}{\"text\":\"${safe_name}\",\"callback_data\":\"t_s_${svc}_${i}_${page}\"}"
+        col=$((col + 1))
+        if [ $col -eq 3 ]; then
+            kb="${kb}${row}],"
+            row="["
+            col=0
+        fi
+        i=$((i + 1))
+    done
+    if [ $col -gt 0 ]; then kb="${kb}${row}],"; fi
+    
+    local nav="["
+    if [ "$page" -gt 1 ]; then
+        nav="${nav}{\"text\":\"⬅ Prev\",\"callback_data\":\"t_pp_${svc}_$((page - 1))\"},"
+    fi
+    nav="${nav}{\"text\":\"$page / $total_pages\",\"callback_data\":\"ignore\"}"
+    if [ "$page" -lt "$total_pages" ]; then
+        nav="${nav},{\"text\":\"Next ➔\",\"callback_data\":\"t_pp_${svc}_$((page + 1))\"}"
+    fi
+    nav="${nav}]"
+    kb="${kb}${nav},[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back to Groups\",\"callback_data\":\"t_pg_${svc}_1\"}]]"
+    
+    local safe_gname=$(escape_html "$gname")
+    send_keyboard_menu "🌐 <b>Group: ${safe_gname}</b>\nCurrent: <code>${current_proxy}</code>\nSelect proxy:" "$chat_id" "$kb"
+}
+tunnel_set_proxy() {
+    local svc="$1"
+    local p_idx="$2"
+    local page="$3"
+    local chat_id="$4"
+    local cur_group_file="/tmp/xidz_cg_${chat_id}.txt"
+    local proxy_list="/tmp/xidz_tp_${chat_id}.txt"
+    
+    local gname=$(cat "$cur_group_file")
+    local pname=$(sed -n "${p_idx}p" "$proxy_list")
+    
+    local payload=$(jq -n --arg name "$pname" '{name: $name}')
+    local gname_url=$(jq -nr --arg v "$gname" '$v|@uri')
+    
+    tunnel_api_call "$svc" "/proxies/${gname_url}" "PUT" "$payload"
+    sleep 0.1
+    
+    tunnel_show_proxies "$svc" "" "$page" "$chat_id"
+}
+clear_memory() {
+    local chat_id="$1"
+    ( sync; echo 3 > /proc/sys/vm/drop_caches; rm -rf /tmp/luci* ) >/dev/null 2>&1 &
+    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"back\"}]]"
+    send_keyboard_menu "✔ Cache cleared." "$chat_id" "$kb"
+}
+confirm_reboot() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"✔ Yes, Reboot\",\"callback_data\":\"confirm_reboot_yes\"},{\"text\":\"✘ Cancel\",\"callback_data\":\"back\"}]]"
+    send_keyboard_menu "Reboot Confirmation\nAre you sure you want to reboot the system?" "$chat_id" "$kb"
+}
+confirm_poweroff() {
+    local chat_id="$1"
+    local kb="[[{\"text\":\"✔ Yes, PowerOff\",\"callback_data\":\"confirm_poweroff_yes\"},{\"text\":\"✘ Cancel\",\"callback_data\":\"back\"}]]"
+    send_keyboard_menu "Power Off Confirmation\nAre you sure you want to power off the system?" "$chat_id" "$kb"
+}
+handle_command_or_file() {
+    local chat_id="$1"
+    local text="$2"
+    local file_id="$3"
+    local file_name="$4"
+    local command="$text"
+    local thread_suffix=""; [ -n "$MESSAGE_THREAD_ID_CUR" ] && thread_suffix="_${MESSAGE_THREAD_ID_CUR}"
+    local state_file="${STATE_FILE_PREFIX}${chat_id}${thread_suffix}"
+    
+    if [ -n "$BOT_USERNAME_CUR" ]; then
+        if [[ "$command" == *"@${BOT_USERNAME_CUR}"* ]]; then
+            command=$(echo "$command" | sed "s/@${BOT_USERNAME_CUR}//g" | xargs)
+            [ -z "$command" ] && command="/menu"
+        fi
+    fi
+
+    if [ -f "$state_file" ]; then
+        local state=$(cat "$state_file")
+        case "$state" in
+            WAIT_TOOLS_UPLOAD_DIR)
+                local dir=$(echo "$text" | xargs)
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                [ -z "$dir" ] && dir="/tmp"
+                echo "WAIT_TOOLS_UPLOAD_FILE:${dir}|0|0|0" > "$state_file"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"
+                send_keyboard_menu "Directory Set: ${dir}\nNow send/upload your media/file(s) to this bot chat.\n(Multi-upload supported)" "$chat_id" "$kb"
+                return
+                ;;
+            WAIT_TOOLS_UPLOAD_FILE:*)
+                local state_data=${state#WAIT_TOOLS_UPLOAD_FILE:}
+                local dir=$(echo "$state_data" | cut -d'|' -f1)
+                local succ=$(echo "$state_data" | cut -d'|' -f2)
+                local err=$(echo "$state_data" | cut -d'|' -f3)
+                local tot=$(echo "$state_data" | cut -d'|' -f4)
+                [ -z "$succ" ] && succ=0; [ -z "$err" ] && err=0; [ -z "$tot" ] && tot=0
+                
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"✔ Done / Cancel\",\"callback_data\":\"tools_menu\"}]]"
+                if [ -n "$file_id" ]; then
+                    delete_last_message "$chat_id"
+                    local file_info=$(curl $CURL_RESOLVE -s -X GET "${API_URL}/getFile?file_id=${file_id}")
+                    local file_path=$(echo "$file_info" | grep -o '"file_path":"[^"]*"' | cut -d'"' -f4)
+                    tot=$((tot + 1))
+                    if [ -n "$file_path" ]; then
+                        mkdir -p "$dir"
+                        [ -z "$file_name" ] && file_name="file_$(date +%s%N)"
+                        if wget -qO "${dir}/${file_name}" "https://api.telegram.org/file/bot${BOT_TOKEN_CUR}/${file_path}" 2>&1 || curl -s -o "${dir}/${file_name}" "https://api.telegram.org/file/bot${BOT_TOKEN_CUR}/${file_path}" 2>&1; then
+                            succ=$((succ + 1))
+                        else
+                            err=$((err + 1))
+                        fi
+                    else
+                        err=$((err + 1))
+                    fi
+                    echo "WAIT_TOOLS_UPLOAD_FILE:${dir}|${succ}|${err}|${tot}" > "$state_file"
+                    
+                    local ls_out=$(ls -1 "$dir" 2>/dev/null | head -n 15)
+                    [ -z "$ls_out" ] && ls_out="Empty"
+                    ls_out=$(escape_html "$ls_out")
+                    
+                    local msg="Succes Upload ${succ} File | Error ${err} | Total ${tot} File\n\n"
+                    msg="${msg}<b>Folder Contents (${dir}):</b>\n<pre>${ls_out}</pre>\n\n<i>Send more files or press Done.</i>"
+                    send_keyboard_menu "$msg" "$chat_id" "$kb"
+                    return
+                else
+                    if [[ "$text" == /* ]]; then
+                        rm -f "$state_file"
+                    else
+                        delete_last_message "$chat_id"
+                        send_keyboard_menu "✘ Please send a file/image, or press Done.\nWaiting for upload to: ${dir}" "$chat_id" "$kb"
+                        return
+                    fi
+                fi
+                ;;
+            WAIT_TOOLS_DL_DIR)
+                local dir=$(echo "$text" | xargs)
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                [ -z "$dir" ] && dir="/tmp"
+                echo "WAIT_TOOLS_DL_URL:${dir}" > "$state_file"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"✔ Done / Cancel\",\"callback_data\":\"tools_menu\"}]]"
+                send_keyboard_menu "Directory Set: ${dir}\nNow send URL(s) to download.\n(Multi-URL supported by separating with space or newline)" "$chat_id" "$kb"
+                return
+                ;;
+            WAIT_TOOLS_DL_URL:*)
+                local dir=${state#WAIT_TOOLS_DL_URL:}
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"✔ Done / Cancel\",\"callback_data\":\"tools_menu\"}]]"
+                if [[ "$text" == /* ]]; then
+                    rm -f "$state_file"
+                else
+                    delete_last_message "$chat_id"
+                    mkdir -p "$dir"
+                    local urls=$(echo "$text" | tr '\n' ' ')
+                    local result_msg="Download Results:\n"
+                    for url in $urls; do
+                        if [[ "$url" =~ ^https?:// ]]; then
+                            local fname=$(basename "$url" | cut -d? -f1)
+                            [ -z "$fname" ] && fname="dl_$(date +%s)"
+                            local out
+                            if out=$(wget -qO "${dir}/${fname}" "$url" 2>&1 || curl -s -L -o "${dir}/${fname}" "$url" 2>&1); then
+                                local escaped_fname=$(escape_html "$fname")
+                                result_msg="${result_msg}✔ <code>${escaped_fname}</code>\n"
+                            else
+                                local escaped_fname=$(escape_html "$fname")
+                                result_msg="${result_msg}✘ <code>${escaped_fname}</code> (Failed)\n"
+                            fi
+                        fi
+                    done
+                    send_keyboard_menu "${result_msg}\n<i>Send more URLs or press Done.</i>" "$chat_id" "$kb"
+                    return
+                fi
+                ;;
+            WAIT_TOOLS_EXTRACT_FILE)
+                local filepath=$(echo "$text" | xargs)
+                delete_last_message "$chat_id"
+                if [ -f "$filepath" ]; then
+                    echo "WAIT_TOOLS_EXTRACT_DIR:${filepath}" > "$state_file"
+                    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"
+                    send_keyboard_menu "File found: $filepath\nSend destination directory to extract to (e.g. /tmp/ext):" "$chat_id" "$kb"
+                else
+                    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tools_menu\"}]]"
+                    send_keyboard_menu "✘ File not found: $filepath" "$chat_id" "$kb"
+                    rm -f "$state_file"
+                fi
+                return
+                ;;
+            WAIT_TOOLS_EXTRACT_DIR:*)
+                local filepath=${state#WAIT_TOOLS_EXTRACT_DIR:}
+                local dst=$(echo "$text" | xargs)
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tools_menu\"}]]"
+                mkdir -p "$dst"
+                local out
+                local success=0
+                case "$filepath" in
+                    *.tar.bz2) out=$(tar -xjf "$filepath" -C "$dst" 2>&1) && success=1 ;;
+                    *.tar.gz|*.tgz) out=$(tar -xzf "$filepath" -C "$dst" 2>&1) && success=1 ;;
+                    *.tar) out=$(tar -xf "$filepath" -C "$dst" 2>&1) && success=1 ;;
+                    *.zip) out=$(unzip -o "$filepath" -d "$dst" 2>&1) && success=1 ;;
+                    *.gz) 
+                        local fname=$(basename "$filepath" .gz)
+                        out=$(gzip -dc "$filepath" > "${dst}/${fname}" 2>&1) && success=1 
+                        ;;
+                    *) out="Unsupported file extension. Only tar, tar.gz, tgz, tar.bz2, zip, gz are supported." ;;
+                esac
+                out=$(escape_html "$out")
+                if [ "$success" -eq 1 ]; then
+                    send_keyboard_menu "✔ Extraction Success to:\n<code>$dst</code>\n<pre>${out:0:3000}</pre>" "$chat_id" "$kb"
+                else
+                    send_keyboard_menu "✘ Extraction Failed:\n<pre>${out:0:3000}</pre>" "$chat_id" "$kb"
+                fi
+                return
+                ;;
+            WAIT_TOOLS_LUCI_PASS)
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tools_menu\"}]]"
+                if [ -n "$text" ]; then
+                    if command -v chpasswd >/dev/null 2>&1; then
+                        echo "root:$text" | chpasswd
+                    else
+                        echo -e "$text\n$text" | passwd root
+                    fi
+                    echo "$text" > /etc/xidzs_luci_pass.txt
+                    local escaped_pass=$(escape_html "$text")
+                    send_keyboard_menu "✔ LuCI Password changed to:\n<pre>$escaped_pass</pre>" "$chat_id" "$kb"
+                else
+                    send_keyboard_menu "✘ Invalid password!" "$chat_id" "$kb"
+                fi
+                return
+                ;;
+            WAIT_TOOLS_CHANGE_IP)
+                local ip=$(echo "$text" | xargs)
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"
+                if [[ "$ip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+                    uci set network.lan.ipaddr="$ip"
+                    uci commit network
+                    /etc/init.d/network restart >/dev/null 2>&1 &
+                    send_keyboard_menu "✔ LAN IP changed to: <code>$ip</code>\nNetwork is restarting..." "$chat_id" "$kb"
+                else
+                    send_keyboard_menu "✘ Invalid IP Address format!" "$chat_id" "$kb"
+                fi
+                return
+                ;;
+            WAIT_EQOS_SPEED:*)
+                local ip=${state#WAIT_EQOS_SPEED:}
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"eqosplus_menu\"}]]"
+                local up=$(echo "$text" | awk '{print $1}')
+                local down=$(echo "$text" | awk '{print $2}')
+                local tstart=$(echo "$text" | awk '{print $3}')
+                local tend=$(echo "$text" | awk '{print $4}')
+                local week=$(echo "$text" | awk '{print $5}')
+                
+                [ -z "$tstart" ] && tstart="00:00"
+                [ -z "$tend" ] && tend="00:00"
+                [ -z "$week" ] && week="0"
+
+                if [[ "$up" =~ ^[0-9.]+$ ]] && [[ "$down" =~ ^[0-9.]+$ ]]; then
+                    local exists=$(uci show eqosplus 2>/dev/null | grep -E "\.ip='$ip'|\.mac='$ip'" | cut -d. -f2 | cut -d= -f1)
+                    for e in $exists; do uci delete eqosplus.$e 2>/dev/null; done
+                    
+                    uci add eqosplus device >/dev/null
+                    uci set eqosplus.@device[-1].ip="$ip"
+                    uci set eqosplus.@device[-1].mac="$ip"
+                    uci set eqosplus.@device[-1].upload="$up"
+                    uci set eqosplus.@device[-1].download="$down"
+                    uci set eqosplus.@device[-1].timestart="$tstart"
+                    uci set eqosplus.@device[-1].timeend="$tend"
+                    uci set eqosplus.@device[-1].week="$week"
+                    uci set eqosplus.@device[-1].enable="1"
+                    uci commit eqosplus
+                    sleep 1
+                    /etc/init.d/eqosplus reload >/dev/null 2>&1 || /etc/init.d/eqosplus restart >/dev/null 2>&1
+                    send_keyboard_menu "✔ EQoS Rule Added & Applied!\nIP/MAC: <code>${ip}</code>\nUpload: ${up} Mbps\nDownload: ${down} Mbps\nTime: ${tstart} - ${tend} (Week: ${week})" "$chat_id" "$kb"
+                else
+                    send_keyboard_menu "✘ Invalid format! Please use numbers (e.g. 5 10 00:00 00:00 0)." "$chat_id" "$kb"
+                fi
+                return
+                ;;
+            WAIT_TUNNEL_AUTH:*)
+                local svc=${state#WAIT_TUNNEL_AUTH:}
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                echo "$text" > "/etc/xidzs_api_secret_${svc}.txt"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Open Dashboard\",\"callback_data\":\"tunnel_dash_${svc}\"}]]"
+                send_keyboard_menu "✔ API Auth Secret saved!\nTry opening the dashboard again." "$chat_id" "$kb"
+                return
+                ;;
+            WAIT_PKG_DL_URL)
+                local url=$(echo "$text" | xargs)
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                mkdir -p "$DEFAULT_DL_DIR"
+                local fname=$(basename "$url" | cut -d? -f1)
+                local dest="${DEFAULT_DL_DIR}/${fname}"
+                local out
+                local success=0
+                if out=$(wget -qO "$dest" "$url" 2>&1 || curl -s -L -o "$dest" "$url" 2>&1); then
+                    success=1
+                fi
+                out=$(escape_html "$out")
+                if [ "$success" -eq 1 ]; then
+                    echo "WAIT_PKG_CONFIRM:${dest}" > "$state_file"
+                    local kb="[[{\"text\":\"✔ Install Now\",\"callback_data\":\"pkg_install_dl\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"✘ Cancel\",\"callback_data\":\"pkg_menu\"}]]"
+                    send_keyboard_menu "✔ Download Success:\n<code>${fname}</code>\n\nDo you want to install it now?" "$chat_id" "$kb"
+                else
+                    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"pkg_menu\"}]]"
+                    send_keyboard_menu "✘ Download Error:\n<pre>${out:0:3000}</pre>" "$chat_id" "$kb"
+                fi
+                return
+                ;;
+            WAIT_WIFI_SEC_PASS:*)
+                local state_data=${state#WAIT_WIFI_SEC_PASS:}
+                local i=$(echo "$state_data" | cut -d'|' -f1)
+                local val=$(echo "$state_data" | cut -d'|' -f2)
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"w_se_sel\"}]]"
+                if [ ${#text} -ge 8 ]; then
+                    uci set wireless.@wifi-iface[$i].encryption="$val"
+                    uci set wireless.@wifi-iface[$i].key="$text"
+                    uci commit wireless
+                    wifi reload >/dev/null 2>&1 &
+                    local ssid=$(uci -q get wireless.@wifi-iface[$i].ssid)
+                    local escaped_pass=$(escape_html "$text")
+                    send_keyboard_menu "✔ Security for $ssid changed to: $val\n✔ Password set to: <pre>$escaped_pass</pre>\nApplying changes..." "$chat_id" "$kb"
+                else
+                    send_keyboard_menu "✘ Error: Password must be at least 8 characters!" "$chat_id" "$kb"
+                fi
+                return
+                ;;
+            WAIT_IFACE_ADD_NAME)
+                local iname=$(echo "$text" | xargs | tr -cd 'a-zA-Z0-9_-')
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"interface\"}]]"
+                if [ -n "$iname" ]; then
+                    echo "$iname" > "/tmp/xidz_iface_add_${chat_id}.txt"
+                    local p_kb="[[{\"text\":\"DHCP Client\",\"callback_data\":\"i_add_p_dhcp\"},{\"text\":\"Static IP\",\"callback_data\":\"i_add_p_static\"}],[{\"text\":\"PPPoE\",\"callback_data\":\"i_add_p_pppoe\"},{\"text\":\"QMI Cellular\",\"callback_data\":\"i_add_p_qmi\"}],[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"interface\"}]]"
+                    send_keyboard_menu "Interface: <b>$iname</b>\n\nSelect Protocol:" "$chat_id" "$p_kb"
+                else
+                    send_keyboard_menu "✘ Invalid interface name!" "$chat_id" "$kb"
+                fi
+                return
+                ;;
+            WAIT_TOOLS_CHMOD)
+                rm -f "$state_file"
+                delete_last_message "$chat_id"
+                local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tools_menu\"}]]"
+                local perms=$(echo "$text" | awk '{print $1}')
+                local path=$(echo "$text" | awk '{print $2}')
+                if [[ "$perms" =~ ^[0-7]{3,4}$ ]] && [ -e "$path" ]; then
+                    local out
+                    if out=$(chmod "$perms" "$path" 2>&1); then
+                        send_keyboard_menu "✔ Success Set Permission:\n<code>chmod $perms $path</code>" "$chat_id" "$kb"
+                    else
+                        out=$(escape_html "$out")
+                        send_keyboard_menu "✘ Error Set Permission:\n<pre>$out</pre>" "$chat_id" "$kb"
+                    fi
+                else
+                    send_keyboard_menu "✘ Invalid Input Format or File Path Not Found!\n\nEnsure mode is octal (e.g., 755) and target exists." "$chat_id" "$kb"
+                fi
+                return
+                ;;
+        esac
+    fi
+    case "$command" in
+        /start|/menu) delete_last_message "$chat_id"; show_main_menu "$chat_id" ;;
+        /status) delete_last_message "$chat_id"; get_system_status "$chat_id" ;;
+        /clear) delete_last_message "$chat_id"; clear_memory "$chat_id" ;;
+        /packages) delete_last_message "$chat_id"; show_pkg_menu "$chat_id" ;;
+        /tools) delete_last_message "$chat_id"; show_tools_menu "$chat_id" ;;
+        /vnstat) delete_last_message "$chat_id"; show_vnstat_menu "$chat_id" ;;
+        /wifi) delete_last_message "$chat_id"; show_wifi_menu "$chat_id" ;;
+        /tailscale) delete_last_message "$chat_id"; show_remote_menu "$chat_id" ;;
+        /tunnel) delete_last_message "$chat_id"; show_tunnel_menu "$chat_id" ;;
+        /interface) delete_last_message "$chat_id"; show_interface_menu "$chat_id" ;;
+        /services) delete_last_message "$chat_id"; show_services_menu "$chat_id" ;;
+        /ttl) delete_last_message "$chat_id"; show_ttl_menu "$chat_id" ;;
+        /crontab) delete_last_message "$chat_id"; show_cron_menu "$chat_id" ;;
+        /theme) delete_last_message "$chat_id"; show_theme_menu "$chat_id" ;;
+        /about) delete_last_message "$chat_id"; show_about_menu "$chat_id" ;;
+        /help) delete_last_message "$chat_id"; send_message "XIDZs Bot Help\n/start - Main menu\n/menu - Main menu\n/clear - Clear cache\n/packages - Packages Manager\n/tools - System Tools\n/vnstat - vnstat monitoring\n/wifi - WiFi settings\n/ttl - Modify TTL\n/crontab - Cron Manager\n/theme - Theme Manager\n/about - About Bot" "$chat_id" ;;
+        *) 
+            if [ -n "$BOT_USERNAME_CUR" ] && [[ "$text" == *"@${BOT_USERNAME_CUR}"* ]]; then
+                delete_last_message "$chat_id"
+                show_main_menu "$chat_id"
+            else
+                delete_last_message "$chat_id"
+                send_message "✘ Unknown command." "$chat_id"
+            fi
+            ;;
+    esac
+}
+handle_callback() {
+    local cb="$1"
+    local id="$2"
+    local chat_id="$3"
+    local msg_id="$4"
+    local thread_suffix=""; [ -n "$MESSAGE_THREAD_ID_CUR" ] && thread_suffix="_${MESSAGE_THREAD_ID_CUR}"
+    local state_file="${STATE_FILE_PREFIX}${chat_id}${thread_suffix}"
+    log_message "CALLBACK: $cb from $chat_id (Thread: $MESSAGE_THREAD_ID_CUR)"
+    answer_callback "$id"
+    case "$cb" in
+        "home"|"back") show_main_menu "$chat_id" ;;
+        "status") get_system_status "$chat_id" ;;
+        "interface") show_interface_menu "$chat_id" ;;
+        "network_menu") show_network_menu "$chat_id" ;;
+        "pkg_menu") show_pkg_menu "$chat_id" ;;
+        "tools_menu") show_tools_menu "$chat_id" ;;
+        "wifi_menu") show_wifi_menu "$chat_id" ;;
+        "modem_menu") show_modem_menu "$chat_id" ;;
+        "tunnel_menu") show_tunnel_menu "$chat_id" ;;
+        "vnstat_menu") show_vnstat_menu "$chat_id" ;;
+        "services_menu") show_services_menu "$chat_id" ;;
+        "ttl_menu") show_ttl_menu "$chat_id" ;;
+        "cron_menu") show_cron_menu "$chat_id" ;;
+        "theme_menu") show_theme_menu "$chat_id" ;;
+        "about_menu") show_about_menu "$chat_id" ;;
+        "gpio_menu") show_gpio_menu "$chat_id" ;;
+        "bot_menu") show_bot_menu "$chat_id" ;;
+        "remote_menu") show_remote_menu "$chat_id" ;;
+        "clear_memory") clear_memory "$chat_id" ;;
+        "wifi_view_devs") view_wifi_users "$chat_id" ;;
+        "wifi_enable") wifi_enable "$chat_id" ;;
+        "wifi_disable") wifi_disable "$chat_id" ;;
+        "wifi_manage") wifi_manage_users "$chat_id" ;;
+        "wifi_blocked") wifi_blocked_list "$chat_id" ;;
+        "wifi_pass") echo "WAIT_WIFI_PASS" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"wifi_menu\"}]]"; send_keyboard_menu "Send New WiFi Password (min 8 chars):" "$chat_id" "$kb" ;;
+        "wifi_ssid") echo "WAIT_WIFI_SSID" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"wifi_menu\"}]]"; send_keyboard_menu "Send New WiFi SSID:" "$chat_id" "$kb" ;;
+        "wifi_view_pass") wifi_view_pass "$chat_id" ;;
+        "wifi_sched") show_wifi_sched_menu "$chat_id" ;;
+        "wifi_sched_on") echo "WAIT_WIFI_ON" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"wifi_sched\"}]]"; send_keyboard_menu "Send Cron format for Auto ON (e.g. 0 6 * * *):" "$chat_id" "$kb" ;;
+        "wifi_sched_off") echo "WAIT_WIFI_OFF" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"wifi_sched\"}]]"; send_keyboard_menu "Send Cron format for Auto OFF (e.g. 0 22 * * *):" "$chat_id" "$kb" ;;
+        "wifi_sched_clear") sed -i '/wifi up/d' /etc/crontabs/root 2>/dev/null; sed -i '/wifi down/d' /etc/crontabs/root 2>/dev/null; /etc/init.d/cron restart; show_wifi_sched_menu "$chat_id" ;;
+        "eqosplus_menu") eqosplus_menu "$chat_id" ;;
+        "eqosplus_enable") eqosplus_enable "$chat_id" ;;
+        "eqosplus_disable") eqosplus_disable "$chat_id" ;;
+        "eqosplus_view") eqosplus_view "$chat_id" ;;
+        "eqosplus_clear") eqosplus_clear "$chat_id" ;;
+        "eqosplus_restart")
+            /etc/init.d/eqosplus restart >/dev/null 2>&1
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"eqosplus_menu\"}]]"
+            send_keyboard_menu "✔ EQoS Plus Restarted." "$chat_id" "$kb"
+            ;;
+        eqos_set_*)
+            local ip=${cb#eqos_set_}
+            echo "WAIT_EQOS_SPEED:${ip}" > "$state_file"
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"eqosplus_menu\"}]]"
+            send_keyboard_menu "Setting limits for IP: <b>${ip}</b>\n\nSend Upload, Download, TimeStart, TimeEnd, and Week.\nFormat: <code>Up Down Start End Week</code>\nExample: <code>5 10 00:00 00:00 0</code>\n(0 = Everyday)" "$chat_id" "$kb"
+            ;;
+        "restart_netdata") restart_netdata "$chat_id" ;;
+        "restart_netmonitor") restart_netmonitor "$chat_id" ;;
+        "restart_bandix") restart_bandix "$chat_id" ;;
+        "pkg_update") pkg_update_action "$chat_id" ;;
+        "pkg_install_prompt") echo "WAIT_PKG_INSTALL" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"pkg_menu\"}]]"; send_keyboard_menu "Send Package Name:" "$chat_id" "$kb" ;;
+        "pkg_custom_prompt") echo "WAIT_PKG_CUSTOM" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"pkg_menu\"}]]"; send_keyboard_menu "Send Custom Path (e.g. /tmp):" "$chat_id" "$kb" ;;
+        "pkg_dl_prompt") echo "WAIT_PKG_DL_URL" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"pkg_menu\"}]]"; send_keyboard_menu "Send Download URL:" "$chat_id" "$kb" ;;
+        "pkg_scan_prompt") echo "WAIT_PKG_SCAN" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"pkg_menu\"}]]"; send_keyboard_menu "Send Directory to Scan (e.g. /tmp):" "$chat_id" "$kb" ;;
+        "pkg_install_dl")
+            if [ -f "$state_file" ]; then
+                local state=$(cat "$state_file")
+                if [[ "$state" == WAIT_PKG_CONFIRM:* ]]; then
+                    local dest=${state#WAIT_PKG_CONFIRM:}
+                    rm -f "$state_file"
+                    local out
+                    local success=0
+                    send_keyboard_menu "Installing package..." "$chat_id" "[[{\"text\":\"Wait...\",\"callback_data\":\"ignore\"}]]"
+                    out=$(opkg install "$dest" 2>&1) && success=1
+                    out=$(escape_html "$out")
+                    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"pkg_menu\"}]]"
+                    if [ "$success" -eq 1 ]; then
+                        send_keyboard_menu "✔ Install Success:\n<pre>${out:0:3000}</pre>" "$chat_id" "$kb"
+                    else
+                        send_keyboard_menu "✘ Install Error:\n<pre>${out:0:3000}</pre>" "$chat_id" "$kb"
+                    fi
+                fi
+            fi
+            ;;
+        "tools_scan") echo "WAIT_TOOLS_SCAN" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Send Directory Path to Scan (e.g. /tmp):" "$chat_id" "$kb" ;;
+        "tools_delete") echo "WAIT_TOOLS_DEL" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Send Name/Path to Delete (e.g. luci-theme-rtawrt):" "$chat_id" "$kb" ;;
+        "tools_move") echo "WAIT_TOOLS_MOVE_SRC" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Send Name/Path to Move (e.g. luci-theme-rtawrt):" "$chat_id" "$kb" ;;
+        "tools_upload") echo "WAIT_TOOLS_UPLOAD_DIR" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Send Target Directory for upload (e.g. /tmp or /root):" "$chat_id" "$kb" ;;
+        "tools_dl_url") echo "WAIT_TOOLS_DL_DIR" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Send Destination Directory for download (e.g. /tmp or /root):" "$chat_id" "$kb" ;;
+        "tools_extract") echo "WAIT_TOOLS_EXTRACT_FILE" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Send full path of the file to extract (e.g. /tmp/file.zip):" "$chat_id" "$kb" ;;
+        "tools_shell") echo "WAIT_TOOLS_SHELL" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Terminal Console\nSend Linux Command to execute (e.g. ls, df -h, logread):" "$chat_id" "$kb" ;;
+        "tools_luci_pass_change") echo "WAIT_TOOLS_LUCI_PASS" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "Send New LuCI/Root Password:" "$chat_id" "$kb" ;;
+        "tools_chmod") echo "WAIT_TOOLS_CHMOD" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"; send_keyboard_menu "⚙ <b>Set File/Directory Permission</b>\n\nSend permission mode and target path.\nFormat: <code>[Mode] [Path]</code>\nExample: <code>755 /root/contoh.ipk</code>" "$chat_id" "$kb" ;;
+        "tools_luci_pass_view")
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"tools_menu\"}]]"
+            if [ -f "/etc/xidzs_luci_pass.txt" ]; then
+                local pass=$(cat /etc/xidzs_luci_pass.txt)
+                local escaped_pass=$(escape_html "$pass")
+                send_keyboard_menu "LuCI Password:\n<pre>$escaped_pass</pre>" "$chat_id" "$kb"
+            else
+                send_keyboard_menu "✘ Password not found or not set via Bot." "$chat_id" "$kb"
+            fi
+            ;;
+        "tools_change_ip")
+            echo "WAIT_TOOLS_CHANGE_IP" > "$state_file"
+            local cur_ip=$(uci -q get network.lan.ipaddr)
+            [ -z "$cur_ip" ] && cur_ip="Unknown"
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tools_menu\"}]]"
+            send_keyboard_menu "Current LAN IP: <b>${cur_ip}</b>\n\nSend New LAN IP (e.g. 192.168.2.1):" "$chat_id" "$kb"
+            ;;
+        "svc_adguard") restart_adguard "$chat_id" ;;
+        "svc_dnsmasq") restart_dnsmasq "$chat_id" ;;
+        "svc_samba") status_samba "$chat_id" ;;
+        "svc_conn") active_connections "$chat_id" ;;
+        "internet") check_internet "$chat_id" ;;
+        "speedtest") run_speedtest "$chat_id" ;;
+        "restart_firewall") restart_firewall "$chat_id" ;;
+        "list_dhcp") list_dhcp "$chat_id" ;;
+        "gpio_enable") enable_gpio "$chat_id" ;;
+        "gpio_disable") disable_gpio "$chat_id" ;;
+        "enable_remote") remote_enable "$chat_id" ;;
+        "disable_remote") remote_disable "$chat_id" ;;
+        "restart_remote") remote_restart "$chat_id" ;;
+        "status_remote") remote_status "$chat_id" ;;
+        "bot_restart") restart_bot "$chat_id" ;;
+        "bot_disable") disable_bot "$chat_id" ;;
+        "enable_on_boot") boot_on_enable "$chat_id" ;;
+        "disable_on_boot") boot_on_disable "$chat_id" ;;
+        "bot_change_token") echo "WAIT_BOT_TOKEN" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"bot_menu\"}]]"; send_keyboard_menu "Send New Bot Token (Replaces existing):" "$chat_id" "$kb" ;;
+        "bot_add_admin") echo "WAIT_BOT_ADD_ADMIN" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"bot_menu\"}]]"; send_keyboard_menu "Send New Admin (ID/Username):" "$chat_id" "$kb" ;;
+        "bot_del_admin") echo "WAIT_BOT_DEL_ADMIN" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"bot_menu\"}]]"; send_keyboard_menu "Send Admin (ID/Username) to remove:" "$chat_id" "$kb" ;;
+        "bot_view_admins")
+            local auth_data=$(grep "^ALLOWED_CHAT_IDS=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2)
+            local admins=""
+            for item in $auth_data; do
+                if [ -n "$item" ]; then admins="${admins}\n- ${item}"; fi
+            done
+            [ -z "$admins" ] && admins="\nNone"
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"bot_menu\"}]]"
+            send_keyboard_menu "Admin List:${admins}" "$chat_id" "$kb"
+            ;;
+        "bot_add_group") echo "WAIT_BOT_ADD_GROUP" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"bot_menu\"}]]"; send_keyboard_menu "Send New Group (ID/Name/URL):" "$chat_id" "$kb" ;;
+        "bot_del_group") echo "WAIT_BOT_DEL_GROUP" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"bot_menu\"}]]"; send_keyboard_menu "Send Group (ID/Name/URL) to remove:" "$chat_id" "$kb" ;;
+        "bot_view_groups")
+            local auth_data=$(grep "^ALLOWED_GROUP_IDS=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2)
+            local groups=""
+            for item in $auth_data; do
+                if [ -n "$item" ]; then groups="${groups}\n- ${item}"; fi
+            done
+            [ -z "$groups" ] && groups="\nNone"
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"bot_menu\"}]]"
+            send_keyboard_menu "Group List:${groups}" "$chat_id" "$kb"
+            ;;
+        "bot_auto_restart") echo "WAIT_BOT_AUTORESTART" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"bot_menu\"}]]"; send_keyboard_menu "Send Auto Restart Interval (in hours, e.g., 6 or 12):" "$chat_id" "$kb" ;;
+        "bot_grp_on") sed -i 's/^GROUP_MODE=.*/GROUP_MODE="1"/' /usr/bin/xidz; show_bot_menu "$chat_id" ;;
+        "bot_grp_off") sed -i 's/^GROUP_MODE=.*/GROUP_MODE="0"/' /usr/bin/xidz; show_bot_menu "$chat_id" ;;
+        "vnstat_summary") get_vnstat_summary "$chat_id" ;;
+        "vnstat_daily") get_vnstat_daily "$chat_id" ;;
+        "vnstat_monthly") get_vnstat_monthly "$chat_id" ;;
+        "vnstat_hourly") get_vnstat_hourly "$chat_id" ;;
+        "vnstat_interface") show_vnstat_interface "$chat_id" ;;
+        "modem_restart") restart_modem "$chat_id" ;;
+        "modem_airplane") modem_airplane_mode "$chat_id" ;;
+        "modem_hp") modem_hp "$chat_id" ;;
+        "add_cron") echo "WAIT_CRON" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"cron_menu\"}]]"; send_keyboard_menu "Send Cron Command (e.g. 0 4 * * * reboot):" "$chat_id" "$kb" ;;
+        "del_cron") del_cron_menu "$chat_id" ;;
+        "view_cron") view_cron "$chat_id" ;;
+        "ttl_enable") ttl_enable "$chat_id" ;;
+        "ttl_disable") ttl_disable "$chat_id" ;;
+        "ttl_change") echo "WAIT_TTL" > "$state_file"; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"ttl_menu\"}]]"; send_keyboard_menu "Send New TTL Value (e.g. 64 or 65):" "$chat_id" "$kb" ;;
+        set_theme_*)
+            local t=${cb#set_theme_}
+            local t_path=$(uci -q get luci.themes.$t)
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"theme_menu\"}]]"
+            if [ -n "$t_path" ]; then
+                uci set luci.main.mediaurlbase="$t_path"
+                uci commit luci
+                rm -rf /tmp/luci-*
+                send_keyboard_menu "✔ Theme applied: $t" "$chat_id" "$kb"
+            else
+                send_keyboard_menu "✘ Theme not found." "$chat_id" "$kb"
+            fi
+            ;;
+        rmc_*) local n=${cb#rmc_}; sed -i "${n}d" /etc/crontabs/root; /etc/init.d/cron restart; local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"cron_menu\"}]]"; send_keyboard_menu "✔ Cron deleted." "$chat_id" "$kb" ;;
+        blk_all) block_all_mac "$chat_id" ;;
+        blk_*) local mac=${cb#blk_}; block_mac "$chat_id" "$mac" ;;
+        unb_all) unblock_all_mac "$chat_id" ;;
+        unb_*) local mac=${cb#unb_}; unblock_mac "$chat_id" "$mac" ;;
+        tunnel_dash_*) show_tunnel_dashboard "$(echo "$cb" | sed 's/tunnel_dash_//')" "$chat_id" "$state_file" ;;
+        tunnel_mode_direct_*) change_tunnel_mode "direct" "$(echo "$cb" | sed 's/tunnel_mode_direct_//')" "$chat_id" ;;
+        tunnel_mode_rule_*) change_tunnel_mode "rule" "$(echo "$cb" | sed 's/tunnel_mode_rule_//')" "$chat_id" ;;
+        tunnel_mode_global_*) change_tunnel_mode "global" "$(echo "$cb" | sed 's/tunnel_mode_global_//')" "$chat_id" ;;
+        tunnel_set_auth_*)
+            local svc="$(echo "$cb" | sed 's/tunnel_set_auth_//')"
+            echo "WAIT_TUNNEL_AUTH:${svc}" > "$state_file"
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"tunnel_dash_${svc}\"}]]"
+            send_keyboard_menu "API Authentication\n\nSend the API Secret / Password for $svc:" "$chat_id" "$kb"
+            ;;
+        w_ch_sel) wifi_select_radio "ch" "$chat_id" ;;
+        w_mo_sel) wifi_select_radio "mo" "$chat_id" ;;
+        w_se_sel) wifi_select_iface "$chat_id" ;;
+        w_ch_r_*) wifi_show_channels "${cb#w_ch_r_}" "$chat_id" ;;
+        w_mo_r_*) wifi_show_modes "${cb#w_mo_r_}" "$chat_id" ;;
+        w_se_i_*) wifi_show_sec "${cb#w_se_i_}" "$chat_id" ;;
+        w_ch_v_*)
+            local data=${cb#w_ch_v_}
+            local r=$(echo "$data" | cut -d'_' -f1)
+            local val=$(echo "$data" | cut -d'_' -f2-)
+            uci set wireless.$r.channel="$val"
+            uci commit wireless
+            wifi reload >/dev/null 2>&1 &
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"w_ch_sel\"}]]"
+            send_keyboard_menu "✔ Channel for $r changed to: $val\nApplying changes..." "$chat_id" "$kb"
+            ;;
+        w_mo_v_*)
+            local data=${cb#w_mo_v_}
+            local r=$(echo "$data" | cut -d'_' -f1)
+            local val=$(echo "$data" | cut -d'_' -f2-)
+            uci set wireless.$r.htmode="$val"
+            uci commit wireless
+            wifi reload >/dev/null 2>&1 &
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"w_mo_sel\"}]]"
+            send_keyboard_menu "✔ HT Mode for $r changed to: $val\nApplying changes..." "$chat_id" "$kb"
+            ;;
+        w_se_v_*)
+            local data=${cb#w_se_v_}
+            local i=$(echo "$data" | cut -d'_' -f1)
+            local val=$(echo "$data" | cut -d'_' -f2-)
+            if [ "$val" != "none" ]; then
+                local cur_key=$(uci -q get wireless.@wifi-iface[$i].key)
+                if [ -z "$cur_key" ]; then
+                    echo "WAIT_WIFI_SEC_PASS:${i}|${val}" > "$state_file"
+                    local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"w_se_sel\"}]]"
+                    send_keyboard_menu "You selected <b>${val}</b> but no password exists.\n\nSend a new WiFi Password (min 8 chars) to apply this security mode:" "$chat_id" "$kb"
+                    return
+                fi
+            fi
+            uci set wireless.@wifi-iface[$i].encryption="$val"
+            if [ "$val" = "none" ]; then
+                uci delete wireless.@wifi-iface[$i].key 2>/dev/null
+            fi
+            uci commit wireless
+            wifi reload >/dev/null 2>&1 &
+            local ssid=$(uci -q get wireless.@wifi-iface[$i].ssid)
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"w_se_sel\"}]]"
+            send_keyboard_menu "✔ Security for $ssid changed to: $val\nApplying changes..." "$chat_id" "$kb"
+            ;;
+        "iface_add")
+            echo "WAIT_IFACE_ADD_NAME" > "$state_file"
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"interface\"}]]"
+            send_keyboard_menu "Send New Interface Name (e.g., tethering, wan2):" "$chat_id" "$kb"
+            ;;
+        "iface_rm_menu")
+            local ifaces=$(uci show network 2>/dev/null | grep "=interface" | cut -d. -f2 | cut -d= -f1)
+            local kb="["
+            local row="["
+            local col=0
+            for iface in $ifaces; do
+                if [[ "$iface" =~ ^(loopback|lan|br-lan|eth0|phy0)$ ]]; then continue; fi
+                [ $col -gt 0 ] && row="${row},"
+                row="${row}{\"text\":\"${iface}\",\"callback_data\":\"i_rm_${iface}\"}"
+                col=$((col+1))
+                if [ $col -eq 3 ]; then kb="${kb}${row}],"; row="["; col=0; fi
+            done
+            if [ $col -gt 0 ]; then kb="${kb}${row}],"; fi
+            kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"interface\"}]]"
+            send_keyboard_menu "Select Interface to Remove:" "$chat_id" "$kb"
+            ;;
+        i_rm_*)
+            local iface=${cb#i_rm_}
+            uci delete network.$iface 2>/dev/null
+            uci commit network
+            /etc/init.d/network restart >/dev/null 2>&1 &
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"interface\"}]]"
+            send_keyboard_menu "✔ Interface $iface removed.\nNetwork is restarting..." "$chat_id" "$kb"
+            ;;
+        i_add_p_*)
+            local proto=${cb#i_add_p_}
+            local iname=$(cat "/tmp/xidz_iface_add_${chat_id}.txt" 2>/dev/null)
+            echo "${iname}|${proto}" > "/tmp/xidz_iface_add_${chat_id}.txt"
+            local devs=$(ls -1 /sys/class/net/ 2>/dev/null | grep -vE '^(lo|ifb|teql|erspan|gre|ip_vti|ip6|sit)' | xargs)
+            local kb="["
+            local row="["
+            local col=0
+            for dev in $devs; do
+                [ $col -gt 0 ] && row="${row},"
+                row="${row}{\"text\":\"${dev}\",\"callback_data\":\"i_add_d_${dev}\"}"
+                col=$((col+1))
+                if [ $col -eq 3 ]; then kb="${kb}${row}],"; row="["; col=0; fi
+            done
+            if [ $col -gt 0 ]; then kb="${kb}${row}],"; fi
+            kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"interface\"}]]"
+            send_keyboard_menu "Interface: <b>$iname</b>\nProtocol: <b>$proto</b>\n\nSelect Physical Device:" "$chat_id" "$kb"
+            ;;
+        i_add_d_*)
+            local dev=${cb#i_add_d_}
+            local state_data=$(cat "/tmp/xidz_iface_add_${chat_id}.txt" 2>/dev/null)
+            echo "${state_data}|${dev}" > "/tmp/xidz_iface_add_${chat_id}.txt"
+            local iname=$(echo "$state_data" | cut -d'|' -f1)
+            local proto=$(echo "$state_data" | cut -d'|' -f2)
+            local zones=$(uci show firewall 2>/dev/null | grep "=zone" | cut -d. -f2 | cut -d= -f1)
+            local kb="["
+            local row="["
+            local col=0
+            for z in $zones; do
+                local zname=$(uci -q get firewall.$z.name)
+                [ -z "$zname" ] && zname="$z"
+                [ $col -gt 0 ] && row="${row},"
+                row="${row}{\"text\":\"${zname}\",\"callback_data\":\"i_add_z_${zname}\"}"
+                col=$((col+1))
+                if [ $col -eq 3 ]; then kb="${kb}${row}],"; row="["; col=0; fi
+            done
+            if [ $col -gt 0 ]; then kb="${kb}${row}],"; fi
+            kb="${kb}[{\"text\":\"None / Skip\",\"callback_data\":\"i_add_z_none\"}],"
+            kb="${kb}[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Cancel\",\"callback_data\":\"interface\"}]]"
+            send_keyboard_menu "Interface: <b>$iname</b>\nProtocol: <b>$proto</b>\nDevice: <b>$dev</b>\n\nSelect Firewall Zone:" "$chat_id" "$kb"
+            ;;
+        i_add_z_*)
+            local zone_name=${cb#i_add_z_}
+            local state_data=$(cat "/tmp/xidz_iface_add_${chat_id}.txt" 2>/dev/null)
+            rm -f "/tmp/xidz_iface_add_${chat_id}.txt"
+            local iname=$(echo "$state_data" | cut -d'|' -f1)
+            local proto=$(echo "$state_data" | cut -d'|' -f2)
+            local dev=$(echo "$state_data" | cut -d'|' -f3)
+
+            uci set network.$iname=interface
+            uci set network.$iname.proto="$proto"
+            uci set network.$iname.device="$dev"
+            uci commit network
+
+            if [ "$zone_name" != "none" ]; then
+                local zones=$(uci show firewall 2>/dev/null | grep "=zone" | cut -d. -f2 | cut -d= -f1)
+                for z in $zones; do
+                    local n=$(uci -q get firewall.$z.name)
+                    if [ "$n" = "$zone_name" ]; then
+                        local cur_net=$(uci -q get firewall.$z.network)
+                        if [ -n "$cur_net" ]; then
+                            if ! echo "$cur_net" | grep -qw "$iname"; then
+                                uci set firewall.$z.network="$cur_net $iname"
+                            fi
+                        else
+                            uci set firewall.$z.network="$iname"
+                        fi
+                        uci commit firewall
+                        break
+                    fi
+                done
+            fi
+
+            /etc/init.d/network restart >/dev/null 2>&1 &
+            /etc/init.d/firewall restart >/dev/null 2>&1 &
+            
+            local kb="[[{\"text\":\"Home\",\"callback_data\":\"home\"},{\"text\":\"Back\",\"callback_data\":\"interface\"}]]"
+            send_keyboard_menu "✔ Interface <b>$iname</b> added successfully!\n\nProtocol: $proto\nDevice: $dev\nFirewall Zone: $zone_name\n\nApplying changes..." "$chat_id" "$kb"
+            ;;
+        t_pg_*) local s=$(echo "$cb" | cut -d'_' -f3); local p=$(echo "$cb" | cut -d'_' -f4); tunnel_show_groups "$s" "$p" "$chat_id" ;;
+        t_g_*) local s=$(echo "$cb" | cut -d'_' -f3); local i=$(echo "$cb" | cut -d'_' -f4); tunnel_show_proxies "$s" "$i" "1" "$chat_id" ;;
+        t_pp_*) local s=$(echo "$cb" | cut -d'_' -f3); local p=$(echo "$cb" | cut -d'_' -f4); tunnel_show_proxies "$s" "" "$p" "$chat_id" ;;
+        t_s_*) local s=$(echo "$cb" | cut -d'_' -f3); local i=$(echo "$cb" | cut -d'_' -f4); local p=$(echo "$cb" | cut -d'_' -f5); tunnel_set_proxy "$s" "$i" "$p" "$chat_id" ;;
+        "ignore") ;;
+        tunnel_select_*) show_tunnel_action_menu "$(echo "$cb" | sed 's/tunnel_select_//' | awk '{for(i=1;i<=NF;i++){$i=toupper(substr($i,1,1))substr($i,2)}}1')" "$chat_id" ;;
+        tunnel_reload_*) tunnel_service_action "reload" "$(echo "$cb" | sed 's/tunnel_reload_//')" "$chat_id" ;;
+        tunnel_restart_*) tunnel_service_action "restart" "$(echo "$cb" | sed 's/tunnel_restart_//')" "$chat_id" ;;
+        tunnel_stop_*) tunnel_service_action "stop" "$(echo "$cb" | sed 's/tunnel_stop_//')" "$chat_id" ;;
+        tunnel_status_*) tunnel_service_action "status" "$(echo "$cb" | sed 's/tunnel_status_//')" "$chat_id" ;;
+        iface_select_*) show_interface_action_menu "$(echo "$cb" | sed 's/iface_select_//')" "$chat_id" ;;
+        iface_restart_*) restart_interface "$(echo "$cb" | sed 's/iface_restart_//')" "$chat_id" ;;
+        iface_reload_*) reload_interface "$(echo "$cb" | sed 's/iface_reload_//')" "$chat_id" ;;
+        iface_down_*) interface_down "$(echo "$cb" | sed 's/iface_down_//')" "$chat_id" ;;
+        iface_up_*) interface_up "$(echo "$cb" | sed 's/iface_up_//')" "$chat_id" ;;
+        "reboot") confirm_reboot "$chat_id" ;;
+        "poweroff") confirm_poweroff "$chat_id" ;;
+        "confirm_reboot_yes") delete_last_message "$chat_id"; send_message "✔ Rebooting..." "$chat_id"; sleep 2; reboot ;;
+        "confirm_poweroff_yes") delete_last_message "$chat_id"; send_message "✔ Powering OFF..." "$chat_id"; sleep 2; poweroff ;;
+    esac
+}
+poll_bot() {
+    local token="$1"
+    local offset_file="${OFFSET_FILE}_${token//:/_}"
+    local last_offset=0
+    if [ -f "$offset_file" ]; then last_offset=$(cat "$offset_file"); fi
+    local bot_info=$(curl -s -X GET "https://api.telegram.org/bot${token}/getMe")
+    local bot_username=$(echo "$bot_info" | grep -o '"username":"[^"]*"' | head -1 | cut -d'"' -f4)
+    local wib=$(TZ="Asia/Jakarta" date '+%H:%M:%S')
+    local init_auth=$(grep "^ALLOWED_CHAT_IDS=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2 | tr ',.' ' ' | xargs)
+    local init_grp=$(grep "^ALLOWED_GROUP_IDS=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2 | tr ',.' ' ' | xargs)
+    local gm=$(grep "^GROUP_MODE=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2)
+    local all_notify="$init_auth"
+    [ "$gm" = "1" ] && all_notify="$init_auth $init_grp"
+    for cid in $all_notify; do
+        if [[ "$cid" =~ ^-?[0-9]+$ ]]; then
+            local json_payload=$(jq -n --arg cid "$cid" --arg text "$(echo -e "XIDZs Bot Started\n\n✔ System Ready\nWIB: $wib\n\nType /start or @${bot_username} to open menu.")" '{chat_id: $cid, text: $text, parse_mode: "HTML"}')
+            curl -s -X POST "https://api.telegram.org/bot${token}/sendMessage" -H "Content-Type: application/json" -d "$json_payload" >/dev/null
+        fi
+    done
+    while true; do
+        local updates=$(curl $CURL_RESOLVE -s -X GET "https://api.telegram.org/bot${token}/getUpdates?offset=$((last_offset + 1))&timeout=30")
+        if [[ -z "$updates" || "$updates" == *"\"result\":[]"* ]]; then
+            sleep 1
+            continue
+        fi
+        local ids=$(echo "$updates" | grep -o '"update_id":[0-9]*' | grep -o '[0-9]*')
+        for uid in $ids; do
+            if [ "$uid" -le "$last_offset" ]; then continue; fi
+            echo "$uid" > "$offset_file"
+            last_offset="$uid"
+            local update_data=$(echo "$updates" | grep -A 50 "\"update_id\":$uid")
+            export START_UPTIME=$(cut -d' ' -f1 /proc/uptime)
+            local msg_date=""
+            [[ "$update_data" =~ \"date\":([0-9]+) ]] && msg_date="${BASH_REMATCH[1]}"
+            export MSG_DATE_CUR="$msg_date"
+            local chat_id=""
+            [[ "$update_data" =~ \"chat\":\{\"id\":([0-9-]+) ]] && chat_id="${BASH_REMATCH[1]}"
+            local chat_type=""
+            [[ "$update_data" =~ \"chat\":\{[^\}]*\"type\":\"([^\"]+)\" ]] && chat_type="${BASH_REMATCH[1]}"
+            local chat_title=""
+            [[ "$update_data" =~ \"chat\":\{[^\}]*\"title\":\"([^\"]+)\" ]] && chat_title="${BASH_REMATCH[1]}"
+            local chat_uname=""
+            [[ "$update_data" =~ \"chat\":\{[^\}]*\"username\":\"([^\"]+)\" ]] && chat_uname="${BASH_REMATCH[1]}"
+            local from_id=""
+            [[ "$update_data" =~ \"from\":\{\"id\":([0-9-]+) ]] && from_id="${BASH_REMATCH[1]}"
+            local from_username=""
+            [[ "$update_data" =~ \"from\":\{[^\}]*\"username\":\"([^\"]+)\" ]] && from_username="${BASH_REMATCH[1]}"
+            local thread_id=""
+            [[ "$update_data" =~ \"message_thread_id\":([0-9]+) ]] && thread_id="${BASH_REMATCH[1]}"
+            local dynamic_auth=$(grep "^ALLOWED_CHAT_IDS=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2 | tr ',.' ' ' | xargs)
+            local dynamic_group_auth=$(grep "^ALLOWED_GROUP_IDS=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2 | tr ',.' ' ' | xargs)
+            local dynamic_group_mode=$(grep "^GROUP_MODE=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2)
+            local auth_list=" $dynamic_auth "
+            local group_auth_list=" $dynamic_group_auth "
+            local is_auth_user=0
+            local is_auth_chat=0
+            if echo "$auth_list" | grep -iq " $from_id "; then is_auth_user=1; fi
+            if [ -n "$from_username" ]; then
+                if echo "$auth_list" | grep -iq " $from_username "; then is_auth_user=1; fi
+                if echo "$auth_list" | grep -iq " @$from_username "; then is_auth_user=1; fi
+            fi
+            if [ "$chat_type" = "private" ]; then
+                is_auth_chat=1
+            else
+                if [ "$dynamic_group_mode" = "1" ]; then
+                    if echo "$group_auth_list $auth_list" | grep -iq " $chat_id "; then is_auth_chat=1; fi
+                    if [ -n "$chat_title" ]; then
+                        if echo "$group_auth_list $auth_list" | grep -iq " $chat_title "; then is_auth_chat=1; fi
+                    fi
+                    if [ -n "$chat_uname" ]; then
+                        if echo "$group_auth_list $auth_list" | grep -iq " @$chat_uname "; then is_auth_chat=1; fi
+                        if echo "$group_auth_list $auth_list" | grep -iq " $chat_uname "; then is_auth_chat=1; fi
+                    fi
+                fi
+            fi
+            if [ "$is_auth_user" -eq 1 ] && [ "$is_auth_chat" -eq 1 ]; then
+                export BOT_TOKEN_CUR="$token"
+                export API_URL="https://api.telegram.org/bot${BOT_TOKEN_CUR}"
+                export BOT_USERNAME_CUR="$bot_username"
+                export MESSAGE_THREAD_ID_CUR="$thread_id"
+                if [[ "$update_data" =~ \"callback_query\" ]]; then
+                    local cb_id=""
+                    [[ "$update_data" =~ \"id\":\"([0-9]+)\" ]] && cb_id="${BASH_REMATCH[1]}"
+                    local cb_data=""
+                    [[ "$update_data" =~ \"data\":\"([^\"]+)\" ]] && cb_data="${BASH_REMATCH[1]}"
+                    if [ -n "$cb_data" ] && [ -n "$cb_id" ]; then handle_callback "$cb_data" "$cb_id" "$chat_id"; fi
+                elif [[ "$update_data" =~ \"document\"|\"photo\"|\"video\"|\"audio\" ]]; then
+                    local file_id=""
+                    local file_name=""
+                    if [[ "$update_data" =~ \"document\" ]]; then
+                        [[ "$update_data" =~ \"file_id\":\"([^\"]+)\" ]] && file_id="${BASH_REMATCH[1]}"
+                        [[ "$update_data" =~ \"file_name\":\"([^\"]+)\" ]] && file_name="${BASH_REMATCH[1]}"
+                    elif [[ "$update_data" =~ \"photo\" ]]; then
+                        file_id=$(echo "$update_data" | grep -o '"file_id":"[^"]*"' | tail -1 | cut -d'"' -f4)
+                        file_name="photo_${uid}.jpg"
+                    elif [[ "$update_data" =~ \"video\" ]]; then
+                        [[ "$update_data" =~ \"file_id\":\"([^\"]+)\" ]] && file_id="${BASH_REMATCH[1]}"
+                        [[ "$update_data" =~ \"file_name\":\"([^\"]+)\" ]] && file_name="${BASH_REMATCH[1]}"
+                        [ -z "$file_name" ] && file_name="video_${uid}.mp4"
+                    elif [[ "$update_data" =~ \"audio\" ]]; then
+                        [[ "$update_data" =~ \"file_id\":\"([^\"]+)\" ]] && file_id="${BASH_REMATCH[1]}"
+                        [[ "$update_data" =~ \"file_name\":\"([^\"]+)\" ]] && file_name="${BASH_REMATCH[1]}"
+                        [ -z "$file_name" ] && file_name="audio_${uid}.mp3"
+                    fi
+                    if [ -n "$file_id" ]; then
+                        handle_command_or_file "$chat_id" "" "$file_id" "$file_name"
+                    fi
+                elif [[ "$update_data" =~ \"message\" ]]; then
+                    local text=""
+                    [[ "$update_data" =~ \"text\":\"([^\"]+)\" ]] && text="${BASH_REMATCH[1]}"
+                    if [ -n "$text" ]; then handle_command_or_file "$chat_id" "$text" "" ""; fi
+                fi
+            fi
+        done
+    done
+}
+main() {
+    log_message "XIDZs Bot Started"
+    local TG_IP=$(ping -c 1 -W 1 api.telegram.org 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+    [ -z "$TG_IP" ] && TG_IP="149.154.167.220"
+    export CURL_RESOLVE="--resolve api.telegram.org:443:$TG_IP"
+    export CHAT_IDS=$(echo "$ALLOWED_CHAT_IDS" | tr ',.' ' ' | xargs)
+    export TOKENS=$(echo "$BOT_TOKENS" | tr ',.' ' ' | xargs)
+    for token in $TOKENS; do
+        poll_bot "$token" &
+    done
+    wait
+}
+cleanup() {
+    log_message "XIDZs Bot Stopped"
+    export CHAT_IDS=$(grep "^ALLOWED_CHAT_IDS=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2 | tr ',.' ' ' | xargs)
+    export GRP_IDS=$(grep "^ALLOWED_GROUP_IDS=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2 | tr ',.' ' ' | xargs)
+    local gm=$(grep "^GROUP_MODE=" /usr/bin/xidz | head -n 1 | cut -d'"' -f2)
+    local all_notify="$CHAT_IDS"
+    [ "$gm" = "1" ] && all_notify="$CHAT_IDS $GRP_IDS"
+    export TOKENS=$(echo "$BOT_TOKENS" | tr ',.$' ' ')
+    for token in $TOKENS; do
+        local URL="https://api.telegram.org/bot${token}"
+        for cid in $all_notify; do
+            if [[ "$cid" =~ ^-?[0-9]+$ ]]; then
+                local json_payload=$(jq -n --arg cid "$cid" --arg text "✘ Bot Stopped" '{chat_id: $cid, text: $text, parse_mode: "HTML"}')
+                curl $CURL_RESOLVE -s -X POST "${URL}/sendMessage" -H "Content-Type: application/json" -d "$json_payload" >/dev/null
+            fi
+        done
+    done
+    kill $(jobs -p) 2>/dev/null
+    exit 0
+}
+trap cleanup SIGTERM SIGINT
+if ! command -v curl >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then exit 1; fi
+touch "$LOG_FILE"
+main

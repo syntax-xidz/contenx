@@ -1,0 +1,280 @@
+{#
+	Argon is a clean HTML5 theme for LuCI. It is based on luci-theme-material Argon Template
+
+	luci-theme-argon
+	Copyright 2020 Jerrykuku <jerrykuku@qq.com>
+
+	Have a bug? Please create an issue here on GitHub!
+	https://github.com/jerrykuku/luci-theme-argon/issues
+
+	luci-theme-material:
+	Copyright 2015 Lutty Yang <lutty@wcan.in>
+
+	Argon Theme
+	https://demos.creative-tim.com/argon-dashboard/index.html
+
+	Licensed to the public under the Apache License 2.0
+-#}
+
+{%
+	import { readfile, access } from 'fs';
+	import { cursor } from 'uci';
+	import { srand } from 'math';
+	import { getuid, getspnam } from 'luci.core';
+
+	const boardinfo = ubus.call("system", "board");
+	const hostname = striptags(boardinfo?.hostname ?? '?');
+
+	let cfg = cursor();
+
+	http.prepare_content('text/html; charset=UTF-8');
+
+	srand(+substr(reverse(time() + ""), 0, 8));
+
+	let mode = 'dark';
+	let bar_color = '#1a2538';
+	let primary, dark_primary, blur_radius, blur_radius_dark, blur_opacity, blur_opacity_dark;
+	let css_theme = 'glass';
+	
+	if (access('/etc/config/argon')) {
+		primary          = cfg.get_first('argon', 'global', 'primary')          ?? '#3f5582';
+		dark_primary     = cfg.get_first('argon', 'global', 'dark_primary')     ?? '#1a2538';
+		blur_radius      = cfg.get_first('argon', 'global', 'blur')             ?? '12';
+		blur_radius_dark = cfg.get_first('argon', 'global', 'blur_dark')        ?? '15';
+		blur_opacity     = cfg.get_first('argon', 'global', 'transparency')     ?? '0.8';
+		blur_opacity_dark = cfg.get_first('argon', 'global', 'transparency_dark') ?? '0.8';
+		mode             = cfg.get_first('argon', 'global', 'mode')             ?? 'dark';
+		css_theme        = cfg.get_first('argon', 'global', 'gaya_theme')       ?? 'glass';
+		bar_color        = (mode == 'dark') ? dark_primary : primary;
+	}
+	
+	const dark_css_path = '/www/luci-static/argon/css/';
+	
+	let glass_css = access(`${dark_css_path}glass.css`) ? readfile(`${dark_css_path}glass.css`) : '';
+	let blue_css  = access(`${dark_css_path}blue.css`)  ? readfile(`${dark_css_path}blue.css`)  : '';
+	let sdark_css = access(`${dark_css_path}sdark.css`) ? readfile(`${dark_css_path}sdark.css`) : '';
+	let dark_css  = access(`${dark_css_path}dark.css`)  ? readfile(`${dark_css_path}dark.css`)  : '';
+	let mint_css  = access(`${dark_css_path}mint.css`)  ? readfile(`${dark_css_path}mint.css`)  : '';
+	let gold_css  = access(`${dark_css_path}gold.css`)  ? readfile(`${dark_css_path}gold.css`)  : '';
+	let redx_css  = access(`${dark_css_path}redx.css`)  ? readfile(`${dark_css_path}redx.css`)  : '';
+	
+	let theme_css = 
+		(css_theme == 'blue')  ? blue_css  :
+		(css_theme == 'sdark') ? sdark_css :
+		(css_theme == 'dark')  ? dark_css  :
+		(css_theme == 'mint')  ? mint_css  :
+		(css_theme == 'glass') ? glass_css :
+		(css_theme == 'gold')  ? gold_css  :
+		(css_theme == 'redx')  ? redx_css  :
+		glass_css;
+
+-%}
+<!DOCTYPE html>
+<html lang="{{ dispatcher.lang }}">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>{{ hostname }}{{ node?.title ? ` - ${striptags(node.title)}` : '' }} - LuCI</title>
+
+	<meta name="robots" content="noindex, nofollow">
+
+	<meta http-equiv="X-Content-Type-Options" content="nosniff">
+	<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+	<meta http-equiv="X-XSS-Protection" content="1; mode=block">
+	<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+
+	<meta name="format-detection" content="telephone=no, email=no">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="apple-mobile-web-app-title" content="{{ hostname }} - LuCI">
+
+	<meta name="theme-color" content="{{ bar_color }}">
+	<meta name="msapplication-TileColor" content="{{ bar_color }}">
+	<meta name="msapplication-TileImage" content="{{ media }}/icon/ms-icon-144x144.png">
+	<meta name="application-name" content="{{ hostname }} - LuCI">
+
+	<link rel="icon" type="image/x-icon" href="{{ media }}/favicon.ico">
+	<link rel="icon" type="image/png" sizes="16x16" href="{{ media }}/icon/favicon-16x16.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="{{ media }}/icon/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="{{ media }}/icon/favicon-96x96.png">
+	<link rel="icon" type="image/png" sizes="192x192" href="{{ media }}/icon/android-icon-192x192.png">
+	<link rel="apple-touch-icon" sizes="60x60" href="{{ media }}/icon/apple-icon-60x60.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="{{ media }}/icon/apple-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="{{ media }}/icon/apple-icon-144x144.png">
+	<link rel="manifest" href="{{ media }}/icon/manifest.json" crossorigin="use-credentials">
+
+	<link rel="stylesheet" href="{{ media }}/css/cascade.css?v=2.4.3">
+	<style title="text/css">
+		{% if (mode == 'normal'): %}
+		@media (prefers-color-scheme: dark) {
+			{{ theme_css }}
+		}
+		{% endif %}
+		{% if (mode == 'dark'): %}
+		{{ theme_css }}
+		{% endif -%}
+		{% if (access('/etc/config/argon')): %}
+		:root {
+			--primary: {{ primary }};
+			--dark-primary: {{ dark_primary }};
+			--blur-radius:{{ blur_radius }}px;
+			--blur-opacity:{{ blur_opacity }};
+			--blur-radius-dark:{{ blur_radius_dark }}px;
+			--blur-opacity-dark:{{ blur_opacity_dark }};
+		}
+		{% endif -%}
+	</style>
+	{% if (node?.css): %}
+	<link rel="stylesheet" href="{{ resource }}/{{ node.css}}">
+	{% endif -%}
+	{% if (css): %}
+	<style title="text/css">
+		{{ css }}
+	</style>
+	{% endif -%}
+	<script src="{{ dispatcher.build_url('admin/translations', dispatcher.lang) }}?v={{ version.luciversion }}"></script>
+	<script src="{{ resource }}/cbi.js?v={{ version.luciversion }}"></script>
+	<script src="{{ resource }}/luci.js?v={{ version.luciversion }}"></script>
+</head>
+
+<body class="lang_{{ dispatcher.lang }} {{ node?.title ? ` - ${striptags(node.title)}` : '' }} {% if (ctx.authsession): %}logged-in{% endif %}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}">
+
+	<div class="main">
+		<div class="main-left" id="mainmenu" style="display:none">
+			<div class="sidenav-header d-flex align-items-center">
+				<a class="brand" href="#">{{ hostname }}</a>
+				<div class="ml-auto">
+					<div class="sidenav-toggler d-none d-xl-block active" data-action="sidenav-unpin" data-target="#sidenav-main">
+						<div class="sidenav-toggler-inner">
+							<i class="sidenav-toggler-line"></i>
+							<i class="sidenav-toggler-line"></i>
+							<i class="sidenav-toggler-line"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="main-right">
+			<header class="bg-primary">
+				<div class="fill">
+					<div class="container">
+						<div class="flex1">
+							<a class="showSide"></a>
+							<tr>
+								<td><a href='/cgi-bin/luci/admin/network/network'><img src="{{ media }}/navbar/interface.png" width="35" height="35"></a></td>
+								<td><a href='/cgi-bin/luci/admin/system/tinyfm'><img src="{{ media }}/navbar/tinyfm.png" width="35" height="35"></a></td>
+								<td><a href='/cgi-bin/luci/admin/services/droidnet'><img src="{{ media }}/navbar/droidnet.png" width="35" height="35"></a></td>
+								<td><a href='/cgi-bin/luci/admin/modem/3ginfo-lite'><img src="{{ media }}/navbar/modem.png" width="35" height="35"></a></td>
+								<td><a href='/cgi-bin/luci/admin/status/netmonitor'><img src="{{ media }}/navbar/netmon.png" width="35" height="35"></a></td>
+								<!-- <td><a href='/cgi-bin/luci/admin/services/openclash'><img src="{{ media }}/navbar/openclash.png" width="35" height="35"></a></td> -->
+								<!-- <td><a href='/cgi-bin/luci/admin/services/nikki'><img src="{{ media }}/navbar/nikki.png" width="35" height="35"></a></td> -->
+								<!-- <td><a href='/cgi-bin/luci/admin/services/passwall'><img src="{{ media }}/navbar/passwall.png" width="35" height="35"></a></td> -->
+								<!-- <td><a href='/cgi-bin/luci/admin/modem/rakitan'><img src="{{ media }}/navbar/rakitanmanager.png" width="35" height="35"></a></td> -->
+								<!-- <td><a href='/cgi-bin/luci/admin/services/neko'><img src="{{ media }}/navbar/neko.png" width="35" height="35"></a></td> -->
+								<!-- <td><a href='/cgi-bin/luci/admin/services/adguardhome'><img src="{{ media }}/navbar/adguard.png" width="35" height="35"></a></td> -->
+							</tr>
+						</div>
+						<div class="status" id="indicators"></div>
+					</div>
+				</div>
+				<style>
+					#menu {
+						position: relative;
+						top: -8px;
+						left: 80px;
+						margin: 0;
+						padding: -5px 0;
+					}
+					#menu ul {
+						list-style: none;
+						margin: 0;
+						padding: 0;
+						display: inline-block;
+					}
+					#menu li {
+						display: inline;
+					}
+					#menu a {
+						color: #fff;
+						text-decoration: none;
+						font-size: 13px;
+						margin: 0 3px;
+					}
+					#menu a:hover {
+						text-decoration: underline;
+					}
+				</style>
+				<nav id='menu'>
+					<ul>
+						<li><a href='/cgi-bin/luci/admin/services/ttyd'>Terminal</a></li>
+						<li><a href='http://192.168.8.1/'>Hilink</a></li>
+						<li><a href='http://192.168.1.2/'>Router</a></li>
+						<li><a id='zash' href='#' target='_blank'>Zash</a></li>
+						<li><a id='yacd' href='#' target='_blank'>Yacd</a></li>
+					</ul>
+				</nav>
+				<script>
+				(function(){
+					'use strict';
+					
+					function init() {
+						const zash = document.getElementById('zash');
+						const yacd = document.getElementById('yacd');
+						
+						if (!zash || !yacd) return setTimeout(init, 100);
+						
+						const { hostname } = window.location;
+						const base = `http://${hostname}:9090`;
+						
+						yacd.href = `${base}/ui/yacd/`;
+						
+						function check(url) {
+							return new Promise((resolve, reject) => {
+								const img = new Image();
+								img.onload = () => resolve(url);
+								img.onerror = reject;
+								img.src = `${url}favicon.ico?${Date.now()}`;
+							});
+						}
+						
+						function set(url, color, text) {
+							zash.href = url;
+							zash.style.color = color;
+							zash.textContent = text;
+						}
+						
+						check(`${base}/ui/Nikki/`)
+							.then(url => set(`${url}?host=${hostname}&port=9090`, '#0f0', 'Nikki'))
+							.catch(() => check(`${base}/ui/zashboard/`)
+								.then(url => set(url, '#0f0', 'Clash'))
+								.catch(() => set(`${base}/ui/zashboard/`, '#fff', 'Zash')));
+					}
+					
+					document.readyState === 'loading' ? 
+						document.addEventListener('DOMContentLoaded', init) : init();
+				})();
+				</script>
+			</header>
+			<div class="darkMask"></div>
+			<div id="maincontent">
+				<div class="container">
+					{% if (getuid() == 0 && getspnam('root')?.pwdp === ''): %}
+					<div class="alert-message error">
+						<h4>{{ _('No password set!') }}</h4>
+						<p>{{ _('There is no password set on this router. Please configure a root password to protect the web interface.') }}</p>
+						{% if (dispatcher.lookup("admin/system/admin")): %}
+						<div class="right"><a class="btn" href="{{ dispatcher.build_url("admin/system/admin") }}">{{ _('Go to password configuration...') }}</a></div>
+						{% endif %}
+					</div>
+					{% endif %}
+
+					<noscript>
+						<div class="alert-message error">
+							<h4>{{ _('JavaScript required!') }}</h4>
+							<p>{{ _('You must enable JavaScript in your browser or LuCI will not work properly.') }}</p>
+						</div>
+					</noscript>
+
+					<div id="tabmenu" style="display:none"></div>

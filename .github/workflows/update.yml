@@ -1,0 +1,160 @@
+name: Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo_x:
+        required: false
+        default: ''
+        type: string
+      repo_y:
+        required: false
+        default: ''
+        type: string
+      repo_z:
+        required: false
+        default: ''
+        type: string
+  push:
+    branches: [main, dev, master, beta]
+  schedule:
+    - cron: '0 */12 * * *'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - env:
+          GITHUB_TOKEN: ${{ secrets.SECRET_KEY }}
+          REPO_X: ${{ github.event.inputs.repo_x }}
+          REPO_Y: ${{ github.event.inputs.repo_y }}
+          REPO_Z: ${{ github.event.inputs.repo_z }}
+        run: |
+          decode() {
+            echo "$1" | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+          }
+
+          check_release() {
+            local n="$1"
+            local target_repo="$2"
+            local cache_file="silent${n}.json"
+            local var_name="SHOULD_UPDATE"
+            [ -n "$n" ] && var_name="SHOULD_UPDATE_SILENT${n}"
+
+            local http_code
+            http_code=$(curl -w "%{http_code}" -s -o temp_silent.json \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -H "User-Agent: GitHub-Actions" \
+              "https://api.github.com/repos/${target_repo}/releases")
+
+            if [ "$http_code" = "200" ]; then
+              echo "Status: 200 ( found )"
+            elif [ "$http_code" = "404" ]; then
+              echo "Status: 404 ( not found )"
+            else
+              echo "Status: $http_code"
+            fi
+
+            local should_update=false
+
+            if [ -f "$cache_file" ]; then
+              base64 -d "$cache_file" > current.json 2>/dev/null || echo '[]' > current.json
+            else
+              echo '[]' > current.json
+            fi
+
+            if [ "$http_code" = "200" ]; then
+              if [ -s temp_silent.json ] && jq empty temp_silent.json >/dev/null 2>&1; then
+                if [ -f "current.json" ]; then
+                  if ! cmp -s temp_silent.json current.json; then
+                    mv temp_silent.json new.json
+                    should_update=true
+                  else
+                    rm -f temp_silent.json
+                    mv current.json new.json
+                  fi
+                else
+                  mv temp_silent.json new.json
+                  should_update=true
+                fi
+              else
+                rm -f temp_silent.json
+                if [ ! -f "current.json" ] || [ "$(jq -r 'type' current.json 2>/dev/null)" != "array" ]; then
+                  echo '[]' > new.json
+                  should_update=true
+                else
+                  mv current.json new.json
+                fi
+              fi
+            elif [ "$http_code" = "404" ]; then
+              rm -f temp_silent.json
+              if [ ! -f "current.json" ] || [ "$(jq 'length' current.json 2>/dev/null || echo "-1")" != "0" ]; then
+                echo '[]' > new.json
+                should_update=true
+              else
+                mv current.json new.json
+              fi
+            else
+              rm -f temp_silent.json
+              if [ ! -f "current.json" ]; then
+                echo '[]' > new.json
+                should_update=true
+              else
+                mv current.json new.json
+              fi
+            fi
+
+            base64 -w 0 new.json > "$cache_file"
+            rm -f new.json current.json temp_silent.json
+            echo "${var_name}=${should_update}" >> "$GITHUB_ENV"
+          }
+
+          check_release "" "$(decode 'qr-dhrak/KVQMf-JEG')"
+          check_release "1" "$(decode 'flagnk-kvqm/KVQMf-JEG')"
+          check_release "2" "$(decode 'rvenkre/KVQMf-JEG')"
+          check_release "3" "$(decode 'arb-dhrak/KVQMf-JEG')"
+          check_release "5" "$(decode 'lnug-k/KVQMf-JEG')"
+          check_release "6" "$(decode 'bnxn-n/KVQMf-JEG')"
+
+          if [ -n "$REPO_X" ]; then check_release "7" "$REPO_X"; fi
+          if [ -n "$REPO_Y" ]; then check_release "8" "$REPO_Y"; fi
+          if [ -n "$REPO_Z" ]; then check_release "9" "$REPO_Z"; fi
+
+      - run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          commit_needed=false
+          for n in "" 1 2 3 5 6 7 8 9; do
+            cache_file="silent${n}.json"
+            var_name="SHOULD_UPDATE"
+            [ -n "$n" ] && var_name="SHOULD_UPDATE_SILENT${n}"
+            value="${!var_name}"
+            if [ "$value" = "true" ] && [ -f "$cache_file" ]; then
+              git add "$cache_file"
+              commit_needed=true
+            fi
+          done
+
+          if [ "$commit_needed" = "true" ] && ! git diff --staged --quiet; then
+            git commit -m "Update data firmware - $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git pull --rebase
+            git push
+          fi
+
+      - if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.SECRET_KEY }}
+        run: |
+          curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs?per_page=50&status=completed" \
+            | jq -r '.workflow_runs[2:] | .[].id' | head -10 | while read run_id; do
+              [ -n "$run_id" ] && curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/${{ github.repository }}/actions/runs/$run_id" >/dev/null 2>&1
+            done

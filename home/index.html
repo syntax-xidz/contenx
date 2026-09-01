@@ -1,0 +1,2630 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>XIDZs-WRT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+:root{
+--bg-main:#f9fafb;
+--bg-card:#ffffff;
+--bg-search:#f3f4f6;
+--bg-pill:#f3f4f6;
+--text-main:#1f2937;
+--text-muted:#6b7280;
+--accent:#3b82f6;
+--accent-hover:#2563eb;
+--border-color:#f3f4f6;
+--badge-bg:#eff6ff;
+--badge-text:#1d4ed8;
+--badge-bg-alt:#f3f4f6;
+--badge-text-alt:#4b5563;
+--radius:12px;
+}
+body.dark-theme{
+--bg-main:#0b0d12;
+--bg-card:#13161c;
+--bg-search:#1a1d24;
+--bg-pill:#1a1d24;
+--text-main:#f3f4f6;
+--text-muted:#9ca3af;
+--accent:#60a5fa;
+--accent-hover:#93c5fd;
+--border-color:#1f232b;
+--badge-bg:#1e3a8a;
+--badge-text:#bfdbfe;
+--badge-bg-alt:#1f232b;
+--badge-text-alt:#d1d5db;
+}
+body.light-theme{
+--bg-main:#f9fafb;
+--bg-card:#ffffff;
+--bg-search:#f3f4f6;
+--bg-pill:#f3f4f6;
+--text-main:#1f2937;
+--text-muted:#6b7280;
+--accent:#3b82f6;
+--accent-hover:#2563eb;
+--border-color:#e5e7eb;
+--badge-bg:#eff6ff;
+--badge-text:#1d4ed8;
+--badge-bg-alt:#f3f4f6;
+--badge-text-alt:#4b5563;
+}
+body.liquid-metal-theme{
+--bg-main:#5c636d;
+--bg-card:#747c87;
+--bg-search:#68707b;
+--bg-pill:#707883;
+--text-main:#f7f9fb;
+--text-muted:#d3d7dc;
+--accent:#e4e8ed;
+--accent-hover:#ffffff;
+--border-color:rgba(255,255,255,0.22);
+--badge-bg:rgba(255,255,255,0.18);
+--badge-text:#ffffff;
+--badge-bg-alt:rgba(15,23,42,0.16);
+--badge-text-alt:#f5f7fa;
+}
+body.liquid-metal-theme{
+background:radial-gradient(circle at 16% 8%,rgba(255,255,255,0.3),transparent 26%),radial-gradient(circle at 84% 92%,rgba(9,14,20,0.38),transparent 32%),linear-gradient(145deg,#3f464f 0%,#7b838d 28%,#aab0b7 48%,#666e78 72%,#303740 100%);
+background-attachment:fixed;
+}
+body.liquid-glass-theme{
+--bg-main:#0d1118;
+--bg-card:rgba(255,255,255,0.075);
+--bg-search:rgba(255,255,255,0.065);
+--bg-pill:rgba(255,255,255,0.055);
+--text-main:#f5f7fb;
+--text-muted:#aeb7c6;
+--accent:#8fd3ff;
+--accent-hover:#c8ecff;
+--border-color:rgba(255,255,255,0.14);
+--badge-bg:rgba(143,211,255,0.16);
+--badge-text:#c9efff;
+--badge-bg-alt:rgba(255,255,255,0.075);
+--badge-text-alt:#e2e8f0;
+}
+body.liquid-glass-theme{
+background:radial-gradient(circle at 15% 12%,rgba(90,148,255,0.22),transparent 30%),radial-gradient(circle at 85% 22%,rgba(255,91,196,0.14),transparent 27%),radial-gradient(circle at 50% 100%,rgba(53,211,153,0.12),transparent 30%),linear-gradient(160deg,#090d14 0%,#121927 48%,#080b10 100%);
+background-attachment:fixed;
+}
+
+body.luxury-black-theme{
+--bg-main:#03050b;
+--bg-card:rgba(255,255,255,0.05);
+--bg-search:rgba(255,255,255,0.045);
+--bg-pill:rgba(255,255,255,0.04);
+--text-main:#f4f5ff;
+--text-muted:#aeb3c7;
+--accent:#a7b8ff;
+--accent-hover:#d4dcff;
+--border-color:rgba(167,184,255,0.18);
+--badge-bg:rgba(167,184,255,0.11);
+--badge-text:#dbe3ff;
+--badge-bg-alt:rgba(255,255,255,0.055);
+--badge-text-alt:#d8dced;
+}
+body.luxury-black-theme{
+background:
+radial-gradient(circle at 10% 8%,rgba(38,117,255,0.2),transparent 24%),
+radial-gradient(circle at 84% 20%,rgba(183,52,255,0.16),transparent 26%),
+radial-gradient(circle at 58% 86%,rgba(55,74,160,0.14),transparent 28%),
+linear-gradient(145deg,#010207 0%,#050917 34%,#0b0a18 62%,#03040a 100%);
+background-attachment:fixed;
+}
+body.neo-light-theme{
+--bg-main:#e6ebf1;
+--bg-card:#e7ecf2;
+--bg-search:#e7ecf2;
+--bg-pill:#e7ecf2;
+--text-main:#394556;
+--text-muted:#778396;
+--accent:#7287a8;
+--accent-hover:#8ea1bf;
+--border-color:rgba(255,255,255,0.78);
+--badge-bg:#e9eef5;
+--badge-text:#5d7294;
+--badge-bg-alt:#e0e6ee;
+--badge-text-alt:#66758a;
+--radius:14px;
+background:#e6ebf1;
+}
+body.neo-dark-theme{
+--bg-main:#1d222b;
+--bg-card:#202630;
+--bg-search:#202630;
+--bg-pill:#202630;
+--text-main:#edf1f6;
+--text-muted:#a7b0be;
+--accent:#9db6d7;
+--accent-hover:#bdd0e8;
+--border-color:rgba(255,255,255,0.05);
+--badge-bg:#262e39;
+--badge-text:#c3d4ea;
+--badge-bg-alt:#252c37;
+--badge-text-alt:#aeb8c6;
+--radius:14px;
+background:#1d222b;
+}
+body.neo-light-theme .navbar,
+body.neo-light-theme .card,
+body.neo-light-theme .search-input,
+body.neo-light-theme .filter-pill,
+body.neo-light-theme .btn-download,
+body.neo-light-theme .page-btn,
+body.neo-light-theme .modal,
+body.neo-light-theme .side-menu,
+body.neo-light-theme .stat-box{
+background:var(--bg-card);
+box-shadow:8px 8px 18px rgba(166,176,191,0.34),-8px -8px 18px rgba(255,255,255,0.88);
+}
+body.neo-dark-theme .navbar,
+body.neo-dark-theme .card,
+body.neo-dark-theme .search-input,
+body.neo-dark-theme .filter-pill,
+body.neo-dark-theme .btn-download,
+body.neo-dark-theme .page-btn,
+body.neo-dark-theme .modal,
+body.neo-dark-theme .side-menu,
+body.neo-dark-theme .stat-box{
+background:var(--bg-card);
+box-shadow:8px 8px 18px rgba(8,11,16,0.55),-8px -8px 18px rgba(47,55,68,0.48);
+}
+body.neo-light-theme .brand-icon{
+background:linear-gradient(145deg,#f8fbff,#cdd7e5);
+color:#53657f;
+box-shadow:8px 8px 16px rgba(166,176,191,0.34),-8px -8px 16px rgba(255,255,255,0.9);
+}
+body.neo-dark-theme .brand-icon{
+background:linear-gradient(145deg,#303846,#1b212b);
+color:#bfd0e6;
+box-shadow:8px 8px 16px rgba(8,11,16,0.58),-8px -8px 16px rgba(49,58,73,0.5);
+}
+body.neo-light-theme .brand-icon svg,
+body.neo-dark-theme .brand-icon svg{fill:currentColor;}
+body.neo-light-theme .btn-download:hover:not(:disabled),
+body.neo-light-theme .btn-download:focus-visible{
+background:var(--bg-card);
+color:var(--accent);
+box-shadow:inset 3px 3px 7px rgba(166,176,191,0.24),inset -3px -3px 7px rgba(255,255,255,0.84),0 0 0 1px rgba(114,135,168,0.18);
+}
+body.neo-dark-theme .btn-download:hover:not(:disabled),
+body.neo-dark-theme .btn-download:focus-visible{
+background:var(--bg-card);
+color:var(--accent);
+box-shadow:inset 3px 3px 7px rgba(8,11,16,0.42),inset -3px -3px 7px rgba(49,58,73,0.38),0 0 0 1px rgba(157,182,215,0.16);
+}
+body.neo-light-theme .stat-box,
+body.neo-dark-theme .stat-box{
+border-color:transparent;
+}
+body.neo-light-theme .filter-pill.active,
+body.neo-dark-theme .filter-pill.active{
+box-shadow:inset 2px 2px 5px rgba(0,0,0,0.08),inset -2px -2px 5px rgba(255,255,255,0.16);
+}
+
+body.neo-brutal-light-theme{
+--bg-main:#f4f0e8;
+--bg-card:#fffdf7;
+--bg-search:#fffdf7;
+--bg-pill:#fffdf7;
+--text-main:#171717;
+--text-muted:#5a5a5a;
+--accent:#ff6b35;
+--accent-hover:#ff8a5b;
+--border-color:#171717;
+--badge-bg:#dff7ff;
+--badge-text:#0d5f7a;
+--badge-bg-alt:#ffe8d7;
+--badge-text-alt:#6a3520;
+--radius:12px;
+background:#f4f0e8;
+}
+body.neo-brutal-light-theme .navbar,
+body.neo-brutal-light-theme .card,
+body.neo-brutal-light-theme .search-input,
+body.neo-brutal-light-theme .filter-pill,
+body.neo-brutal-light-theme .btn-download,
+body.neo-brutal-light-theme .page-btn,
+body.neo-brutal-light-theme .modal,
+body.neo-brutal-light-theme .side-menu,
+body.neo-brutal-light-theme .stat-box{
+background:var(--bg-card);
+border:2px solid #171717;
+box-shadow:3px 3px 0 rgba(23,23,23,0.75),0 7px 16px rgba(23,23,23,0.10);
+}
+body.neo-brutal-light-theme .brand-icon{
+background:#39d0ff;
+color:#171717;
+border:2px solid #171717;
+box-shadow:3px 3px 0 rgba(23,23,23,0.75),0 7px 16px rgba(23,23,23,0.10);
+}
+body.neo-brutal-light-theme .brand-icon svg{fill:currentColor;}
+body.neo-brutal-light-theme .btn-download:hover:not(:disabled),
+body.neo-brutal-light-theme .btn-download:focus-visible{
+background:#39d0ff;
+color:#171717;
+border-color:#171717;
+box-shadow:1px 2px 0 rgba(23,23,23,0.72),0 4px 10px rgba(23,23,23,0.08);
+transform:translate(3px,3px);
+}
+body.neo-brutal-light-theme .stat-box{
+font-weight:600;
+}
+body.neo-brutal-light-theme .filter-pill.active{
+background:var(--accent);
+color:#171717;
+border-color:#171717;
+box-shadow:2px 2px 0 rgba(23,23,23,0.68),0 5px 12px rgba(23,23,23,0.08);
+}
+
+body.luxury-black-theme .navbar,
+body.luxury-black-theme .card,
+body.luxury-black-theme .search-input,
+body.luxury-black-theme .filter-pill,
+body.luxury-black-theme .btn-download,
+body.luxury-black-theme .page-btn,
+body.luxury-black-theme .modal,
+body.luxury-black-theme .side-menu{
+background:linear-gradient(145deg,rgba(255,255,255,0.065),rgba(255,255,255,0.025));
+box-shadow:inset 1px 1px 0 rgba(255,255,255,0.09),inset -1px -1px 0 rgba(0,0,0,0.45),0 18px 42px rgba(0,0,0,0.36);
+}
+body.luxury-black-theme .brand-icon{
+background:linear-gradient(145deg,#d7dcff 0%,#8594ff 40%,#4436a8 68%,#1f5dff 100%);
+border:1px solid rgba(197,207,255,0.24);
+box-shadow:inset 1px 1px 0 rgba(255,255,255,0.42),inset -2px -2px 0 rgba(0,0,0,0.25),0 12px 30px rgba(0,0,0,0.4);
+}
+body.luxury-black-theme .brand-icon svg{
+fill:#0a0e1c;
+}
+body.luxury-black-theme .btn-download:hover:not(:disabled),
+body.luxury-black-theme .btn-download:focus-visible{
+box-shadow:0 0 0 1px rgba(167,184,255,0.24),0 0 28px rgba(105,129,255,0.2);
+}
+body.liquid-metal-theme .navbar,
+body.liquid-metal-theme .card,
+body.liquid-metal-theme .search-input,
+body.liquid-metal-theme .filter-pill,
+body.liquid-metal-theme .btn-download,
+body.liquid-metal-theme .page-btn,
+body.liquid-metal-theme .modal,
+body.liquid-metal-theme .side-menu{
+background:linear-gradient(145deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06) 42%,rgba(19,26,34,0.18) 100%);
+box-shadow:inset 1px 1px 0 rgba(255,255,255,0.3),inset -1px -1px 0 rgba(0,0,0,0.22),0 14px 32px rgba(19,25,33,0.28);
+}
+body.liquid-glass-theme .navbar,
+body.liquid-glass-theme .card,
+body.liquid-glass-theme .search-input,
+body.liquid-glass-theme .filter-pill,
+body.liquid-glass-theme .btn-download,
+body.liquid-glass-theme .page-btn,
+body.liquid-glass-theme .modal,
+body.liquid-glass-theme .side-menu{
+background:linear-gradient(145deg,rgba(255,255,255,0.13),rgba(255,255,255,0.04));
+backdrop-filter:blur(18px) saturate(150%);
+-webkit-backdrop-filter:blur(18px) saturate(150%);
+box-shadow:inset 1px 1px 0 rgba(255,255,255,0.16),inset -1px -1px 0 rgba(0,0,0,0.24),0 18px 42px rgba(0,0,0,0.24);
+}
+body.liquid-metal-theme .brand-icon{
+background:linear-gradient(145deg,#ffffff 0%,#aeb6c1 40%,#5e6670 68%,#f6f8fa 100%);
+box-shadow:inset 1px 1px 0 rgba(255,255,255,0.75),inset -2px -2px 0 rgba(0,0,0,0.2),0 10px 22px rgba(25,31,38,0.24);
+}
+body.liquid-metal-theme .brand-icon svg{
+fill:#26303a;
+}
+body.liquid-glass-theme .brand-icon{
+background:linear-gradient(145deg,rgba(255,255,255,0.32),rgba(143,211,255,0.12));
+border:1px solid rgba(255,255,255,0.18);
+box-shadow:inset 1px 1px 0 rgba(255,255,255,0.32),0 12px 30px rgba(0,0,0,0.28);
+backdrop-filter:blur(14px);
+-webkit-backdrop-filter:blur(14px);
+}
+body.liquid-glass-theme .btn-download:hover:not(:disabled),
+body.liquid-glass-theme .btn-download:focus-visible{
+box-shadow:0 0 0 1px rgba(255,255,255,0.13),0 0 26px rgba(143,211,255,0.2);
+}
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:'Inter',sans-serif;
+-webkit-tap-highlight-color:transparent;
+}
+body{
+background-color:var(--bg-main);
+color:var(--text-main);
+min-height:100vh;
+max-width:100vw;
+overflow-x:hidden;
+display:flex;
+flex-direction:column;
+transition:background-color 0.4s ease,color 0.4s ease;
+}
+.navbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background-color:var(--bg-card);
+border-bottom:1px solid var(--border-color);
+position:sticky;
+top:0;
+z-index:100;
+transition:background-color 0.4s ease,border-color 0.4s ease;
+padding:12px 16px;
+}
+.navbar-brand{
+display:flex;
+align-items:center;
+gap:12px;
+}
+.brand-icon{
+background:linear-gradient(135deg,var(--accent),var(--accent-hover));
+border-radius:var(--radius);
+display:flex;
+justify-content:center;
+align-items:center;
+width:36px;
+height:36px;
+}
+@keyframes spinSmooth{
+from{transform:rotate(0deg);}
+to{transform:rotate(360deg);}
+}
+.brand-icon svg{
+width:20px;
+height:20px;
+fill:white;
+animation:spinSmooth 10s linear infinite;
+}
+#themeBtn svg{
+width:22px;
+height:22px;
+}
+.theme-icon{
+width:22px;
+height:22px;
+fill:currentColor;
+}
+#themeBtn{
+transition:none;
+}
+#themeBtn:hover{
+transform:none;
+}
+@keyframes typingSmooth{
+from{width:0;}
+to{width:9.5ch;}
+}
+@keyframes blink{
+0%,100%{border-color:transparent;}
+50%{border-color:var(--accent);}
+}
+.brand-text h1{
+font-weight:600;
+letter-spacing:0.5px;
+font-size:15px;
+display:inline-block;
+overflow:hidden;
+white-space:nowrap;
+border-right:2px solid var(--accent);
+width:9.5ch;
+opacity:1;
+vertical-align:bottom;
+transition:opacity .65s ease,filter .65s ease,transform .65s ease;
+animation:blink 1s step-end infinite;
+}
+.brand-text h1.typing{
+animation:typingSmooth 2.5s ease-in-out forwards,blink 1s step-end infinite;
+}
+.brand-text h1.fading{
+opacity:0;
+filter:blur(2px);
+transform:translateY(1px);
+}
+.brand-text p{
+color:var(--text-muted);
+font-weight:300;
+font-size:11px;
+}
+.nav-actions{
+display:flex;
+align-items:center;
+gap:4px;
+}
+.icon-btn{
+background:transparent;
+border:none;
+color:var(--text-main);
+cursor:pointer;
+border-radius:var(--radius);
+display:flex;
+align-items:center;
+justify-content:center;
+transition:all 0.3s ease;
+width:38px;
+height:38px;
+}
+.icon-btn:hover{
+background-color:var(--bg-pill);
+transform:scale(1.05);
+}
+.icon-btn svg{
+fill:currentColor;
+transition:fill 0.3s ease;
+width:22px;
+height:22px;
+}
+.container{
+flex:1;
+margin:0 auto;
+width:100%;
+max-width:1500px;
+padding:20px 16px;
+overflow-x:hidden;
+}
+.network-info{
+font-size:11px;
+color:var(--text-muted);
+text-align:center;
+margin-bottom:12px;
+cursor:default;
+user-select:none;
+font-weight:500;
+transition:color 0.3s ease;
+}
+.network-info:hover{
+color:var(--accent);
+}
+
+.network-info{
+display:flex;
+justify-content:center;
+align-items:center;
+flex-wrap:wrap;
+gap:0;
+-webkit-user-select:none;
+user-select:none;
+touch-action:manipulation;
+}
+.network-part{
+display:inline-block;
+cursor:pointer;
+user-select:none;
+-webkit-user-select:none;
+-webkit-touch-callout:none;
+touch-action:manipulation;
+pointer-events:auto;
+padding:2px 0;
+transition:color 0.2s ease,opacity 0.2s ease;
+}
+.network-part:hover{
+color:var(--text-main);
+}
+.network-separator{
+color:var(--text-muted);
+user-select:none;
+}
+.network-part{
+-webkit-user-drag:none;
+}
+
+.network-part.copied{
+color:var(--accent);
+}
+
+.search-container{
+margin-bottom:20px;
+}
+.search-input{
+width:100%;
+background-color:var(--bg-search);
+border:1px solid transparent;
+color:var(--text-main);
+border-radius:var(--radius);
+outline:none;
+transition:all 0.3s ease;
+padding:9px 13px;
+font-size:12.5px;
+}
+.search-input:focus{
+background-color:var(--bg-card);
+border-color:var(--accent);
+}
+.search-input::placeholder{
+color:var(--text-muted);
+font-weight:400;
+}
+.filters{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:8px;
+margin-bottom:12px;
+}
+.filter-pill{
+background-color:var(--bg-card);
+color:var(--text-muted);
+border:1px solid var(--border-color);
+border-radius:var(--radius);
+font-weight:500;
+cursor:pointer;
+user-select:none;
+transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+padding:8px 14px;
+font-size:11px;
+}
+.filter-pill:hover{
+color:var(--text-main);
+}
+.filter-pill.active{
+background-color:var(--bg-card);
+color:var(--text-main);
+border-color:transparent;
+position:relative;
+isolation:isolate;
+box-shadow:none;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+gap:7px;
+}
+.filter-clear{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:15px;
+height:15px;
+font-size:15px;
+line-height:1;
+font-weight:600;
+color:var(--text-muted);
+border-radius:50%;
+transition:all .2s ease;
+z-index:3;
+position:relative;
+}
+.filter-clear:hover{
+color:var(--text-main);
+transform:scale(1.08);
+}
+.filter-pill.active::after{
+content:"";
+position:absolute;
+inset:-2px;
+border-radius:inherit;
+padding:1px;
+background:conic-gradient(from 0deg,#7dd3fc,#a78bfa,#f472b6,#f59e0b,#34d399,#7dd3fc);
+-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+-webkit-mask-composite:xor;
+mask-composite:exclude;
+opacity:0.92;
+pointer-events:none;
+animation:rgbFrame 7s linear infinite;
+z-index:2;
+}
+@keyframes rgbFrame{
+from{filter:hue-rotate(0deg);}
+to{filter:hue-rotate(360deg);}
+}
+.stats-bar{
+display:grid;
+grid-template-columns:repeat(3,minmax(0,1fr));
+gap:6px;
+width:100%;
+margin:0 0 18px;
+}
+.stat-box{
+min-width:0;
+background:linear-gradient(145deg,rgba(255,255,255,0.065),rgba(255,255,255,0.025));
+border:1px solid var(--border-color);
+border-radius:9px;
+padding:7px 5px;
+text-align:center;
+box-shadow:inset 1px 1px 0 rgba(255,255,255,0.04);
+}
+.stat-label{
+display:block;
+color:var(--text-muted);
+font-size:8.5px;
+font-weight:500;
+line-height:1.1;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+margin-bottom:3px;
+}
+.stat-value{
+display:block;
+color:var(--text-main);
+font-size:11.5px;
+font-weight:600;
+line-height:1.12;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+font-variant-numeric:tabular-nums;
+}
+body.light-theme .stat-box{
+background:var(--bg-card);
+}
+@media (min-width:400px){
+.stats-bar{gap:7px;margin-bottom:18px;}
+.stat-box{padding:8px 7px;}
+.stat-label{font-size:9.5px;}
+.stat-value{font-size:12px;}
+}
+@media (min-width:768px){
+.stats-bar{gap:8px;margin-bottom:18px;}
+.stat-box{padding:9px 10px;border-radius:10px;}
+.stat-label{font-size:9.5px;}
+.stat-value{font-size:12px;}
+}
+.card-list{
+display:grid;
+grid-template-columns:1fr;
+transition:opacity 0.3s ease;
+gap:16px;
+margin-bottom:32px;
+width:100%;
+}
+.card{
+background-color:var(--bg-card);
+border:1px solid var(--border-color);
+border-radius:var(--radius);
+display:flex;
+position:relative;
+isolation:isolate;
+flex-direction:column;
+transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+padding:16px;
+gap:14px;
+width:100%;
+overflow:hidden;
+}
+.card::before{
+content:"";
+position:absolute;
+inset:0;
+border-radius:inherit;
+padding:1px;
+background:conic-gradient(from 0deg,#7dd3fc,#a78bfa,#f472b6,#f59e0b,#34d399,#7dd3fc);
+-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+-webkit-mask-composite:xor;
+mask-composite:exclude;
+opacity:0;
+pointer-events:none;
+transition:opacity 0.35s ease;
+z-index:2;
+}
+.card:hover,
+.card:focus-within{
+transform:translateY(-3px);
+border-color:transparent;
+box-shadow:0 0 0 1px rgba(255,255,255,0.04),0 14px 34px rgba(0,0,0,0.2);
+}
+.card:hover::before,
+.card:focus-within::before{
+opacity:1;
+animation:rgbFrame 7s linear infinite;
+}
+.card-header{
+display:flex;
+align-items:flex-start;
+gap:12px;
+width:100%;
+}
+.card-icon{
+background-color:var(--bg-pill);
+color:var(--accent);
+border-radius:var(--radius);
+display:flex;
+justify-content:center;
+align-items:center;
+flex-shrink:0;
+transition:all 0.3s ease;
+width:40px;
+height:40px;
+}
+.card-icon svg{
+fill:currentColor;
+width:20px;
+height:20px;
+}
+.card-title-area{
+flex:1;
+min-width:0;
+overflow:hidden;
+}
+.card-title{
+font-weight:600;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+color:var(--text-main);
+margin-bottom:4px;
+font-size:13px;
+width:100%;
+}
+.card-subtitle{
+color:var(--text-muted);
+font-weight:400;
+font-size:11px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+.card-info-btn{
+background:none;
+border:none;
+color:var(--text-muted);
+cursor:pointer;
+transition:color 0.3s ease;
+padding:2px;
+flex-shrink:0;
+}
+.card-info-btn:hover{
+color:var(--accent);
+}
+.card-info-btn svg{
+fill:currentColor;
+width:20px;
+height:20px;
+}
+.card:focus-within .card-info-btn{
+color:var(--accent);
+}
+.card-badges{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+width:100%;
+}
+.badge{
+border-radius:var(--radius);
+font-weight:600;
+letter-spacing:0.3px;
+padding:4px 10px;
+font-size:10px;
+white-space:nowrap;
+}
+.badge-kernel{
+background-color:var(--badge-bg);
+color:var(--badge-text);
+}
+.badge-size{
+background-color:var(--badge-bg-alt);
+color:var(--badge-text-alt);
+}
+.badge-date{
+background-color:var(--badge-bg-alt);
+color:var(--text-muted);
+font-weight:500;
+}
+.badge-downloads{
+background-color:rgba(16,185,129,0.1);
+color:#10b981;
+}
+.badge-filesystem{
+background-color:var(--badge-bg-alt);
+color:var(--badge-text-alt);
+}
+.btn-download{
+width:100%;
+background-color:var(--bg-pill);
+color:var(--text-main);
+border:1px solid var(--border-color);
+font-weight:600;
+display:flex;
+justify-content:center;
+align-items:center;
+cursor:pointer;
+transition:all 0.3s ease;
+border-radius:var(--radius);
+padding:5px 7px;
+font-size:9.5px;
+gap:4px;
+min-height:34px;
+}
+.btn-download:hover:not(:disabled),
+.btn-download:focus-visible{
+background-color:var(--accent);
+color:white;
+border-color:transparent;
+outline:none;
+box-shadow:0 0 0 1px rgba(255,255,255,0.08),0 0 24px rgba(125,211,252,0.18);
+}
+.btn-download:disabled{
+opacity:0.5;
+cursor:not-allowed;
+}
+.btn-download.timer-active,
+#loginBtn.timer-active{
+opacity:0.9;
+}
+.btn-download.timer-active .download-label,
+#loginBtn.timer-active #loginLabel{
+font-variant-numeric:tabular-nums;
+}
+.download-label{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+white-space:nowrap;
+}
+.btn-download svg{
+fill:currentColor;
+width:14px;
+height:14px;
+flex:0 0 auto;
+}
+.pagination-container{
+display:flex;
+justify-content:center;
+align-items:center;
+flex-wrap:wrap;
+gap:6px;
+}
+.page-btn{
+display:flex;
+align-items:center;
+justify-content:center;
+border:1px solid var(--border-color);
+background:var(--bg-card);
+color:var(--text-main);
+cursor:pointer;
+font-weight:500;
+transition:all 0.3s ease;
+min-width:36px;
+height:36px;
+border-radius:var(--radius);
+font-size:12px;
+}
+.page-btn:hover:not(:disabled){
+border-color:var(--accent);
+color:var(--accent);
+}
+.page-btn.active{
+background:var(--accent);
+color:white;
+border-color:transparent;
+box-shadow:0 0 0 1px rgba(255,255,255,0.08),0 8px 22px rgba(125,211,252,0.18);
+}
+.page-btn:disabled{
+opacity:0.3;
+cursor:not-allowed;
+}
+.main-footer{
+text-align:center;
+padding:24px 16px;
+color:var(--text-muted);
+font-size:12px;
+font-weight:500;
+margin-top:auto;
+}
+.side-menu{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:auto;
+background-color:var(--bg-card);
+border-bottom:1px solid var(--border-color);
+z-index:1000;
+padding:24px;
+visibility:hidden;
+transform:translateY(-100%);
+transition:transform 0.4s cubic-bezier(0.4,0,0.2,1),visibility 0.4s;
+border-radius:0 0 var(--radius) var(--radius);
+}
+.side-menu.open{
+visibility:visible;
+transform:translateY(0);
+}
+.side-menu-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+.side-menu-header h2{
+font-weight:600;
+font-size:18px;
+color:var(--text-main);
+}
+.menu-items{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+}
+.menu-item{
+flex:1 1 auto;
+background-color:var(--bg-pill);
+border:1px solid transparent;
+color:var(--text-main);
+font-weight:500;
+display:flex;
+align-items:center;
+text-align:center;
+justify-content:center;
+cursor:pointer;
+transition:all 0.3s ease;
+padding:14px 18px;
+border-radius:var(--radius);
+font-size:13px;
+}
+.menu-item:hover{
+border-color:var(--accent);
+color:var(--accent);
+background-color:var(--badge-bg);
+}
+.overlay{
+position:fixed;
+top:0;
+left:0;
+width:100vw;
+height:100vh;
+background:rgba(0,0,0,0.5);
+backdrop-filter:blur(4px);
+z-index:999;
+display:none;
+opacity:0;
+transition:opacity 0.4s ease;
+}
+.overlay.show{
+display:block;
+opacity:1;
+}
+.modal{
+display:none;
+position:fixed;
+z-index:1001;
+left:50%;
+top:12px;
+transform:translate(-50%,-10px) scale(0.96);
+background-color:var(--bg-card);
+border:1px solid var(--border-color);
+width:90%;
+max-width:450px;
+max-height:85vh;
+overflow-y:auto;
+opacity:0;
+transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+border-radius:var(--radius);
+padding:16px 14px 24px 14px;
+}
+.modal.show{
+display:block;
+opacity:1;
+transform:translate(-50%,0) scale(1);
+}
+.modal-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:12px;
+padding-bottom:10px;
+border-bottom:1px solid var(--border-color);
+}
+.modal h2{
+font-weight:600;
+color:var(--text-main);
+font-size:18px;
+}
+.modal-content{
+color:var(--text-muted);
+line-height:1.6;
+font-weight:400;
+font-size:13px;
+}
+.modal-content h3{
+color:var(--text-main);
+font-weight:600;
+margin:16px 0 8px 0;
+font-size:14px;
+text-align:center;
+}
+.modal-content ul{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+gap:6px;
+list-style:none;
+padding:0;
+margin-bottom:10px;
+}
+.modal-content li{
+background-color:var(--bg-search);
+border:1px solid var(--border-color);
+padding:8px 12px;
+border-radius:var(--radius);
+margin-bottom:0;
+word-break:break-word;
+display:flex;
+flex-direction:column;
+gap:4px;
+transition:transform 0.3s ease,border-color 0.3s ease;
+}
+.modal-content li:hover{
+transform:translateY(-2px);
+border-color:var(--accent);
+}
+.modal-content a{
+color:var(--accent);
+text-decoration:none;
+font-weight:500;
+transition:color 0.3s ease;
+}
+.modal-content a:hover{
+color:var(--accent-hover);
+}
+.loader-container{
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+color:var(--text-muted);
+grid-column:1/-1;
+padding:40px 20px;
+}
+.loader{
+--color-1:var(--text-main);
+--color-2:var(--accent);
+--size:1px;
+animation:rotate 1s infinite;
+height:calc(50 * var(--size));
+width:calc(50 * var(--size));
+margin-bottom:24px;
+}
+.loader:before,
+.loader:after{
+border-radius:50%;
+content:'';
+display:block;
+height:calc(20 * var(--size));
+width:calc(20 * var(--size));
+}
+.loader:before{
+animation:ball1 1s infinite;
+background-color:var(--color-1);
+box-shadow:calc(30 * var(--size)) 0 0 var(--color-2);
+margin-bottom:calc(10 * var(--size));
+}
+.loader:after{
+animation:ball2 1s infinite;
+background-color:var(--color-2);
+box-shadow:calc(30 * var(--size)) 0 0 var(--color-1);
+}
+@keyframes rotate{
+0%{transform:rotate(0deg) scale(0.8);}
+50%{transform:rotate(360deg) scale(1.2);}
+100%{transform:rotate(720deg) scale(0.8);}
+}
+@keyframes ball1{
+0%{box-shadow:calc(30 * var(--size)) 0 0 var(--color-2);}
+50%{box-shadow:0 0 0 var(--color-2);margin-bottom:0;transform:translate(calc(15 * var(--size)),calc(15 * var(--size)));}
+100%{box-shadow:calc(30 * var(--size)) 0 0 var(--color-2);margin-bottom:calc(10 * var(--size));}
+}
+@keyframes ball2{
+0%{box-shadow:calc(30 * var(--size)) 0 0 var(--color-1);}
+50%{box-shadow:0 0 0 var(--color-1);margin-top:calc(-20 * var(--size));transform:translate(calc(15 * var(--size)),calc(15 * var(--size)));}
+100%{box-shadow:calc(30 * var(--size)) 0 0 var(--color-1);margin-top:0;}
+}
+#passwordModal{top:50% !important;left:50% !important;bottom:auto !important;transform:translate(-50%,-50%) scale(0.96) !important;width:85% !important;max-width:320px !important;border-radius:var(--radius) !important;padding:16px 16px 20px 16px !important;margin:0 !important;}
+#passwordModal.show{transform:translate(-50%,-50%) scale(1) !important;}
+::-webkit-scrollbar{
+width:4px;
+}
+::-webkit-scrollbar-track{
+background:transparent;
+}
+::-webkit-scrollbar-thumb{
+background:var(--border-color);
+border-radius:var(--radius);
+}
+@media (max-width:360px){
+.navbar{padding:10px 12px;}
+.brand-text h1{font-size:14px;}
+.brand-text p{font-size:10px;}
+.container{padding:16px 12px;}
+.filter-pill{padding:6px 12px;font-size:10px;}
+.search-input{padding:9px 11px;font-size:11.5px;}
+.card{padding:14px;gap:12px;}
+.card-title{font-size:12px;}
+.badge{font-size:9px;padding:4px 8px;}
+.btn-download{padding:5px 7px;font-size:9px;min-height:32px;}
+.page-btn{min-width:32px;height:32px;font-size:11px;}
+.menu-item{font-size:10px;padding:10px 6px;}
+}
+@media (min-width:400px){
+.navbar{padding:14px 20px;}
+.brand-text h1{font-size:16px;}
+.container{padding:24px 20px;}
+.filter-pill{padding:8px 16px;font-size:12px;}
+.search-input{padding:11px 15px;font-size:12.5px;}
+.card{padding:20px;}
+.card-title{font-size:14px;}
+.btn-download{padding:6px 7px;font-size:9.5px;min-height:34px;}
+.page-btn{min-width:40px;height:40px;font-size:13px;}
+}
+@media (min-width:480px){
+.container{padding:28px 24px;}
+.filter-pill{padding:10px 18px;font-size:13px;}
+.card-title{font-size:15px;}
+.card-subtitle{font-size:12px;}
+}
+@media (min-width:768px){
+.navbar{padding:16px 32px;}
+.brand-text h1{font-size:17px;}
+.brand-icon{width:44px;height:44px;}
+.container{padding:32px;}
+.card-list{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px;}
+.search-input{padding:12px 18px;font-size:13px;}
+.filter-pill{padding:10px 22px;font-size:13px;}
+.card{padding:24px;gap:16px;}
+.modal{top:auto;bottom:0;left:0;width:100%;max-width:100vw;max-height:85vh;transform:translateY(100%) scale(1);border-radius:var(--radius) var(--radius) 0 0;padding:32px 32px 48px 32px;border-width:1px 0 0 0;}
+.modal.show{transform:translateY(0) scale(1);}
+.modal-header{margin-bottom:24px;padding-bottom:16px;}
+.modal-content ul{gap:12px;margin-bottom:16px;}
+.modal-content li{padding:14px 16px;}
+}
+</style>
+</head>
+<body class="luxury-black-theme">
+<nav class="navbar">
+<div class="navbar-brand">
+<div class="brand-icon">
+<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+</div>
+<div class="brand-text">
+<h1 id="brandTitle">XIDZs-WRT</h1>
+<p>Firmware Devices</p>
+</div>
+</div>
+<div class="nav-actions">
+<button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Luxury Black" aria-label="Ganti tema, Luxury Black">
+<svg id="moonIcon" class="theme-icon" viewBox="0 0 24 24" style="display:block;"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+<svg id="sunIcon" class="theme-icon" viewBox="0 0 24 24" style="display:none;"><path d="M12 7a5 5 0 100 10 5 5 0 000-10zm0-5v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+<svg id="metalIcon" class="theme-icon" viewBox="0 0 24 24" style="display:none;"><path d="M12 2l8 4v12l-8 4-8-4V6l8-4zm0 4.2L7.2 8.6 12 11l4.8-2.4L12 6.2zM6 10.9v6l5 2.5v-6l-5-2.5zm7 8.5l5-2.5v-6l-5 2.5v6z"/></svg>
+<svg id="glassIcon" class="theme-icon" viewBox="0 0 24 24" style="display:none;"><path d="M7 2h10l5 7-10 13L2 9l5-7zm1.1 2L4.6 8h14.8l-3.5-4H8.1zM4.2 10L12 20.2 19.8 10H4.2z"/></svg>
+<svg id="luxuryBlackIcon" class="theme-icon" viewBox="0 0 24 24" style="display:block;"><path d="M12 2l2.1 5.3L19 9.4l-4.9 2.9L12 17.6 9.9 12.3 5 9.4l4.9-2.1L12 2zM19.5 15.2l.9 2.2 2.1.9-.2.4-2.1.9-.9 2.2-.9-2.2-2.1-.9 2.1-.9.9-2.2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+<svg id="neoLightIcon" class="theme-icon" viewBox="0 0 24 24" style="display:none;"><path d="M12 3.5l1.5 3.1 3.4.5-2.4 2.4.6 3.4-3.1-1.6-3.1 1.6.6-3.4-2.4-2.4 3.4-.5L12 3.5zm0 10.2l.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3.9-1.8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+<svg id="neoDarkIcon" class="theme-icon" viewBox="0 0 24 24" style="display:none;"><path d="M7 5h10l2 2v10l-2 2H7l-2-2V7l2-2zm2 4h6v6H9V9zm-4.5-6.5h15M3.5 21.5h17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg id="neoBrutalLightIcon" class="theme-icon" viewBox="0 0 24 24" style="display:none;"><path d="M4 5h16v14H4zM7 8h10M7 12h6M7 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+</button>
+<button class="icon-btn" onclick="toggleMenu()">
+<svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+</button>
+</div>
+</nav>
+<div class="container">
+<div id="networkInfo" class="network-info">Loading network info...</div>
+<div class="search-container">
+<input type="text" id="searchInput" class="search-input" placeholder="Search firmware by device name">
+</div>
+<div class="filters" id="categoryFilters">
+<div class="filter-pill" data-category="openwrt" data-label="OpenWrt">OpenWrt</div>
+<div class="filter-pill" data-category="immortalwrt" data-label="ImmortalWrt">ImmortalWrt</div>
+<div class="filter-pill" data-category="snapshot" data-label="Snapshot">Snapshot</div>
+</div>
+<div class="filters" id="versionFilters">
+<div class="filter-pill" data-version="23.05" data-label="23.05">23.05</div>
+<div class="filter-pill" data-version="24.10" data-label="24.10">24.10</div>
+<div class="filter-pill" data-version="25.12" data-label="25.12">25.12</div>
+</div>
+<div class="filters" id="deviceFilters" style="margin-bottom:24px;">
+<div class="filter-pill" data-device="amlogic" data-label="Amlogic">Amlogic</div>
+<div class="filter-pill" data-device="orangepi" data-label="Orangepi">Orangepi</div>
+<div class="filter-pill" data-device="nanopi" data-label="Nanopi">Nanopi</div>
+<div class="filter-pill" data-device="raspberrypi" data-label="Raspberry Pi">Raspberry Pi</div>
+<div class="filter-pill" data-device="mangopi" data-label="Mangopi">Mangopi</div>
+<div class="filter-pill" data-device="x86" data-label="X86">X86</div>
+</div>
+<div class="stats-bar" id="statsBar">
+<div class="stat-box">
+<span class="stat-label">FIRMWARE</span>
+<span class="stat-value" id="firmwareCount">—</span>
+</div>
+<div class="stat-box">
+<span class="stat-label">DOWNLOAD</span>
+<span class="stat-value" id="downloadCountTotal">—</span>
+</div>
+<div class="stat-box">
+<span class="stat-label">SIZE</span>
+<span class="stat-value" id="sizeTotal">—</span>
+</div>
+</div>
+<div class="card-list" id="cardContainer">
+<div class="loader-container">
+<div class="loader"></div>
+<p>Fetching firmware...</p>
+</div>
+</div>
+<div id="paginationContainer" class="pagination-container"></div>
+</div>
+<footer class="main-footer">© 2026 XIDZs-WRT PROJECT</footer>
+<div class="overlay" id="overlay" onclick="closeAll()"></div>
+<div id="imageViewer" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);backdrop-filter:blur(5px);z-index:9999;justify-content:center;align-items:center;padding:16px;" onclick="this.style.display='none'">
+<img id="imageViewerImg" src="" style="max-width:100%;max-height:100%;border-radius:var(--radius);object-fit:contain;">
+</div>
+<div class="side-menu" id="sideMenu">
+<div class="side-menu-header">
+<h2>XIDZs-WRT Menu</h2>
+<button class="icon-btn" onclick="toggleMenu()" style="width:32px;height:32px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="menu-items">
+<button class="menu-item" onclick="handleInfoAuth()">Informasi</button>
+<button class="menu-item" onclick="openModal('featuresModal')">Features</button>
+<button class="menu-item" onclick="openModal('aboutModal')">About</button>
+<button class="menu-item" onclick="openDynamicModal('preview')">Preview</button>
+<button class="menu-item" onclick="openDynamicModal('devices')">Devices Support</button>
+<button class="menu-item" onclick="openModal('sumberModal')">Sumber & Credit</button>
+<button class="menu-item" onclick="openModal('changelogModal')">Changelog</button>
+<button class="menu-item" onclick="openModal('ownerModal')">Owner</button>
+<button class="menu-item" onclick="openModal('otherModal')">Other Url</button>
+</div>
+</div>
+<div id="infoModal" class="modal" oncontextmenu="return false;" style="user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;-webkit-touch-callout:none;">
+<div class="modal-header">
+<h2>Informasi XIDZs-WRT</h2>
+<button class="icon-btn" onclick="closeAll()" style="width:32px;height:32px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-content">
+<ul>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Detail Sistem:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">XIDZs-WRT Adalah Firmware Custom Berbasis OpenWrt Dan ImmortalWrt</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Info Firmware:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">23.05.x + 24.10.x  ( .IPK ) | 25.12.x ( .APK )</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Alamat Ip Default:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">IP: 192.168.1.1</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Password Default:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">User: root | Pass: luxe</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">WIFI Jaringan:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">SSID: XIDZs / XIDZs_5G | Sandi: XIDZs2026</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Saran Instalasi:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Format Sdcard / Flasdisk sebelum install atau burning, di sarankan gunakan Rufus/Etchdroid, lalu restart devices ( reboot ) setelah booting awal agar configurasi sempurna</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Instruksi GPIO:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Aktifkan via /system/startup/rc.local ( hapus tanda # pada script gpio untuk aktifkan lalu reboot,jika tidak bekerja beda pin gpio )</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Perintah Terminal:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Ketik xdev untuk XDEV Tools ( auto install + configurasi )</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Configurasi Bot:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Ketik xidz untuk Configurasi Bot Monitoring</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Qmodem For Modem Rakitan:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Qmodem Support Arch : x86-64 | aarch64-generic-armv8 | aarch64-cortex-a53 | aarch64-cortex-a72 | aarch64-cortex-a76 > all Os Version Support ( no tested )</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">ModSdcard Version:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Gunakan versi ModSdcard untuk emmc error dan normal ( jangan di install ke EMMC )</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Informasi !!!:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Saya Tidak Bisa Uji coba satu persatu devices karena terlalu banyak firmware dengan berbagai devices berbeda dan jika ada bug/eror di devices tertentu harap maklumi,terimakasih</span></li>
+</ul>
+</div>
+</div>
+<div id="featuresModal" class="modal">
+<div class="modal-header">
+<h2>Features</h2>
+<button class="icon-btn" onclick="closeAll()" style="width:32px;height:32px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-content">
+<h3>Fitur - Fitur</h3>
+<ul>
+<li><span style="color:var(--text-main);font-weight:500;">Tema Argon ⨯ Tema LuxeOs ⨯ Tema Footstrap</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Amlogic Service ( Amlogic Devices )</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Info+Tools Modem  ⨯ IP Information</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Fix TTL ⨯ Tailscale ⨯ Ookla-Speedtest</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Eqosplus ⨯ Netmonitor ⨯ PowerOff</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">GPIO LED Support For HG680P - B860H</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">MODSDCARD For HG680P - B860H</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">WIFI ON | OFF For HG680P - B860H</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Internet Detector ⨯ Connection Monitor</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Auto Time Sync ⨯ File Manager</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">XDEV Tools ⨯ XIDZs Bot Monitoring</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Aria2 ⨯ Samba4 ⨯ Adguardhome ( auto install & configurasi in XDEV Tools )</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">ROOTFS PartSize Tools ( Add + Change + Resize )</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">QModem For Modem Rakitan</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Modemmanager Modified For Modem L850-GL ( install in XDEV Tools )</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Support Berbagai Modem Rakitan</span></li>
+</ul>
+<h3>Varian Kernel Tersedia</h3>
+<ul>
+<li><span style="color:var(--text-main);font-weight:500;">Kernel Versi 5.15.x - 5.4.x</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Kernel Versi 6.1.x - 6.2.x</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Kernel Versi 6.4.x - 6.6.x</span></li>
+<li><span style="color:var(--text-main);font-weight:500;">Kernel Versi 6.12.x - 6.18.x</span></li>
+</ul>
+<h3>Tunnel Options</h3>
+<ul class="info-list">
+<li>No Tunnel</li>
+<li>OpenClash</li>
+<li>OpenClash + Nikki</li>
+<li>Openclash + Qtun</li>
+<li>OpenClash + Clashoo</li>
+<li>OpenClash + Fusiontunx</li>
+<li>OpenClash + Passwall</li>
+<li>Openclash + Passwallssh</li>
+</ul>
+</div>
+</div>
+<div id="aboutModal" class="modal">
+<div class="modal-header">
+<h2>About XIDZs-WRT</h2>
+<button class="icon-btn" onclick="closeAll()" style="width:32px;height:32px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-content">
+<ul>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Visi Project:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">XIDZs-WRT Adalah Sebuah Firmware Custom Yang Dikembangkan Untuk Komunitas Openwrt Indonesia Di Compile Lewat Imagebuilder. Project Ini Bertujuan Untuk Memberikan Pengalaman Networking Yang Lebih Baik Dengan Fitur-Fitur Yang Disesuaikan Dengan Kebutuhan Pengguna. Jangan Lupa Feedbacknya, Terimakasih Banyak!</span></li>
+</ul>
+</div>
+</div>
+<div id="sumberModal" class="modal">
+<div class="modal-header">
+<h2>Sumber & Credit</h2>
+<button class="icon-btn" onclick="closeAll()" style="width:32px;height:32px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-content">
+<ul>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Lisensi:</strong><span style="display:block;margin-top:4px;"><a href="https://github.com/de-quenx/XIDZs-WRT/blob/main/LICENSE" target="_blank">LICENSE Resmi Publik</a></span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">RTA-WrtBuilder:</strong><span style="display:block;margin-top:4px;"><a href="https://github.com/rizkikotet-dev/RTA-WRT" target="_blank">RizkiKotet-Dev</a></span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">friWrt-MyWrtBuilder:</strong><span style="display:block;margin-top:4px;"><a href="https://github.com/frizkyiman/friWrt-MyWrtBuilder" target="_blank">frizkyiman</a></span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">ULO Builder:</strong><span style="display:block;margin-top:4px;"><a href="https://github.com/armarchindo/ULO-Builder/blob/main/ulo" target="_blank">DBAI</a></span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Ophub Builder:</strong><span style="display:block;margin-top:4px;"><a href="https://github.com/ophub" target="_blank">Ophub</a></span></li>
+</ul>
+</div>
+</div>
+<div id="changelogModal" class="modal">
+<div class="modal-header">
+<h2>Riwayat Pembaruan</h2>
+<button class="icon-btn" onclick="closeAll()" style="width:32px;height:32px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-content">
+<h3>02.09.2026</h3>
+<ul class="info-list">
+<li>Update Openclash To v0.47.156-MOD</li>
+<li>Update Nikki To v1.26.1-MOD</li>
+<li>Update Passwall To v26.7.16-1</li>
+<li>Update To Openwrt 24.10.8</li>
+<li>Update XIDZs Bot Monitoring</li>
+<li>Update XDEV Tools</li>
+<li>Update Netmonitor</li>
+<li>Add Tunnel Qtun v1.0.3</li>
+<li>Add Tunnel Passwallssh v4.8.0</li>
+<li>Add Tunnel Clashoo v1.30.0-r9</li>
+<li>Add new Openwrt 25.12.5 & Immortalwrt 25.12.1</li>
+<li>Add new devices Widora Mangopi M28C & M28K</li>
+<li>Add new Tema LuxeOs</li>
+<li>Add new Tema Footstrap</li>
+<li>Remove Netdata Depends in Netmonitor</li>
+<li>Optimasi & Revisi Script Build</li>
+<li>Bug..? Unknown</li>
+</ul>
+<h3>11.03.2026</h3>
+<ul class="info-list">
+<li>Update Tema Argon To v2.7.9-MOD</li>
+<li>Update Openclash To v0.47.047-MOD</li>
+<li>Update Nikki To v1.25-MOD</li>
+<li>Update Passwall To 26.1.30-r1</li>
+<li>added some new device support</li>
+<li>Optimasi & Revisi Script</li>
+</ul>
+<h3>01.01.2026</h3>
+<ul class="info-list">
+<li>Update To Openwrt 24.10.5</li>
+<li>Update To Immortalwrt 24.10.4</li>
+<li>Update To Immortalwrt 23.05.7</li>
+<li>Update Tema Argon To v2.4.7-MOD</li>
+<li>Update Openclash To v0.47.028-MOD</li>
+<li>Update Nikki To v1.24.3-MOD</li>
+<li>Add 10 Custom Loginpage</li>
+<li>Add Netmonitor MOD</li>
+<li>Add Tunnel Fusiontunx v1.0.3-2</li>
+<li>Add xdev Script Tools</li>
+<li>Add xidzs Bot Monitoring</li>
+<li>Optimasi & Revisi Script</li>
+</ul>
+<h3>19.08.2025</h3>
+<ul class="info-list">
+<li>Revisi LoginPage</li>
+<li>Revisi Netmonitor</li>
+<li>Optimasi Script</li>
+<li>Fix Modemmanager</li>
+<li>Update To Openwrt 23.05.6</li>
+<li>Bug..? Unknown</li>
+</ul>
+</div>
+</div>
+<div id="ownerModal" class="modal">
+<div class="modal-header">
+<h2>Builder</h2>
+<button class="icon-btn" onclick="closeAll()" style="width:32px;height:32px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-content">
+<ul>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Telegram:</strong><span style="display:block;margin-top:4px;"><a href="https://t.me/xidz_x" target="_blank">@xidz_x</a></span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Grup Telegram:</strong><span style="display:block;margin-top:4px;"><a href="https://t.me/+QTW4h3LlKH03Y2U1" target="_blank">✘ᴗ✘</a></span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">GitHub:</strong><span style="display:block;margin-top:4px;"><a href="https://github.com/de-quenx" target="_blank">de-quenx</a></span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Facebook:</strong><span style="display:block;margin-top:4px;"><a href="https://www.facebook.com/Fid.Kholiq" target="_blank">Fid Kholiq</a></span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Support Developer:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Apabila Anda menyukai ekosistem Firmware ini, mohon kontribusi bintang (star) di GitHub serta luangkan waktu untuk memberikan *feedback* Anda.</span></li>
+</ul>
+</div>
+</div>
+<div id="otherModal" class="modal">
+<div class="modal-header">
+<h2>Other Links</h2>
+<button class="icon-btn" onclick="closeAll()" style="width:32px;height:32px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-content">
+<ul>
+<li><a href="https://github.com/de-quenx/" target="_blank">Github Profile</a></li>
+<li><a href="https://t.me/xidz_x/" target="_blank">Telegram Profile</a></li>
+<li><a href="https://downloads.openwrt.org/" target="_blank">OpenWrt Update</a></li>
+<li><a href="https://downloads.immortalwrt.org/" target="_blank">ImmortalWrt Update</a></li>
+<li><a href="https://www.speedtest.net/" target="_blank">Speedtest-Ookla</a></li>
+<li><a href="https://fast.com/id/" target="_blank">Speedtest-Fast</a></li>
+<li><a href="https://www.cbn.id/id/speed-test/" target="_blank">Speedtest-CBN</a></li>
+<li><a href="https://browserleaks.com/dns/" target="_blank">DnsLeaks-Test</a></li>
+<li><a href="https://www.dnsleaktest.com/" target="_blank">DnsLeaksTest</a></li>
+<li><a href="https://dnscheck.tools/" target="_blank">Dns-Test</a></li>
+<li><a href="https://ash-speed.hetzner.com/" target="_blank">Download-Test</a></li>
+<li><a href="https://hletrd.github.io/data-waster/" target="_blank">Data-Waster</a></li>
+<li><a href="https://adblock.turtlecute.org/" target="_blank">Adblock-Test</a></li>
+<li><a href="https://github.com/vernesong/OpenClash/releases" target="_blank">Openclash</a></li>
+<li><a href="https://github.com/de-quenx/Openclash-x/releases" target="_blank">Openclash Mod v1</a></li>
+<li><a href="https://github.com/Yogxx/OpenClash/releases" target="_blank">Openclash Mod v2</a></li>
+<li><a href="https://github.com/nikkinikki-org/OpenWrt-nikki/releases" target="_blank">Nikki</a></li>
+<li><a href="https://github.com/de-quenx/nikki-x/releases" target="_blank">Nikki Mod v1</a></li>
+<li><a href="https://github.com/Yogxx/OpenWrt-nikkiku/releases" target="_blank">Nikki Mod v2</a></li>
+<li><a href="https://github.com/xiaorouji/openwrt-passwall/releases" target="_blank">Passwall</a></li>
+<li><a href="https://github.com/nosignals/openwrt-neko/releases" target="_blank">NekoClash</a></li>
+<li><a href="https://github.com/kenzok8/openwrt-clashoo/releases" target="_blank">Clashoo</a></li>
+<li><a href="https://github.com/QcomWrt/luci-app-qtun" target="_blank">Qtun</a></li>
+<li><a href="https://github.com/bobbyunknown/Openwrt-Insomclash/releases" target="_blank">Fusiontunx</a></li>
+<li><a href="https://github.com/nikkinikki-org/OpenWrt-momo/releases" target="_blank">OpenWrt-Momo</a></li>
+<li><a href="https://github.com/lutfailham96/libernet/releases" target="_blank">Libernet</a></li>
+<li><a href="https://github.com/ryanfauzi1/xderm-mini_GUI" target="_blank">Xderm-mini-GUI</a></li>
+<li><a href="https://github.com/rizkikotet-dev/RTA-WRT/" target="_blank">RTA-WRT</a></li>
+<li><a href="https://github.com/frizkyiman/friWrt-MyWrtBuilder/" target="_blank">FriWrt</a></li>
+<li><a href="https://github.com/ophub/kernel/releases/tag/kernel_stable" target="_blank">Kernel Stable</a></li>
+<li><a href="https://github.com/ophub/kernel/releases/tag/kernel_flippy" target="_blank">Kernel Flippy</a></li>
+<li><a href="https://github.com/armarchindo/kernel/releases/tag/kernel_dbai" target="_blank">Kernel Dbai</a></li>
+<li><a href="https://dl.openwrt.ai" target="_blank">Repo Openwrt.ai</a></li>
+<li><a href="https://github.com/timsaya/luci-app-bandix" target="_blank">Bandix Monitor</a></li>
+<li><a href="https://github.com/basiooo/andromodem/releases" target="_blank">Andromodem</a></li>
+<li><a href="https://github.com/animegasan/luci-app-droidmodem/releases" target="_blank">Droidmodem</a></li>
+<li><a href="https://github.com/FUjr/QModem" target="_blank">Qmodem</a></li>
+<li><a href="https://github.com/de-quenx/luci-theme-luxe/releases" target="_blank">Theme Luxe</a></li>
+<li><a href="https://github.com/jerrykuku/luci-theme-argon/releases" target="_blank">Theme Argon</a></li>
+<li><a href="https://github.com/derisamedia/luci-theme-alpha/releases" target="_blank">Theme Alpha</a></li>
+<li><a href="https://github.com/derisamedia/luci-theme-arwi/" target="_blank">Theme Arwi</a></li>
+</ul>
+</div>
+</div>
+<div id="fileInfoModal" class="modal">
+<div class="modal-header">
+<h2>Detail Firmware Lengkap</h2>
+<button class="icon-btn" onclick="closeAll()" style="width:32px;height:32px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-content" id="fileInfoContent"></div>
+</div>
+<div id="passwordModal" class="modal">
+<div class="modal-header" style="margin-bottom:14px;padding-bottom:8px;border-bottom:none;">
+<h2 style="font-size:16px;font-weight:600;">XIDZs-WRT LOGIN</h2>
+<button class="icon-btn" onclick="closeAll()" style="width:28px;height:28px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-content" style="text-align:center;">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+<span style="color:var(--text-main);font-weight:600;font-size:13px;white-space:nowrap;width:45px;text-align:left;">USER :</span>
+<input type="text" id="authUser" value="xidz_x" class="search-input" style="flex:1;padding:10px 14px;margin:0;font-weight:500;font-size:13px;border-radius:var(--radius);" placeholder="Username">
+</div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+<span style="color:var(--text-main);font-weight:600;font-size:13px;white-space:nowrap;width:45px;text-align:left;">KEY :</span>
+<input type="password" id="authKey" class="search-input" placeholder="Password" style="flex:1;padding:10px 14px;margin:0;font-weight:500;font-size:13px;border-radius:var(--radius);" oninput="document.getElementById('loginBtn').disabled = this.value.trim() === ''">
+</div>
+<button id="loginBtn" class="btn-download" onclick="submitAuth()" disabled style="border-radius:var(--radius);padding:7px 8px;font-size:12px;font-weight:600;min-height:36px;">
+<svg viewBox="0 0 24 24" style="margin-right:6px;width:16px;height:16px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Login
+</button>
+<p id="authMessage" style="margin-top:12px;font-size:12px;font-weight:600;min-height:16px;"></p>
+</div>
+</div>
+<div id="dynamicModal" class="modal">
+<div class="modal-header">
+<h2 id="dynamicModalTitle">Title</h2>
+<button class="icon-btn" onclick="closeAll()" style="width:32px;height:32px;">
+<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+</button>
+</div>
+<div class="modal-content" id="dynamicModalContent"></div>
+</div>
+<script>
+const contentData={preview:{items:[{title:'Terminal Ui',image:'../asset/terminal-ui.png'},{title:'XIDZs Bot',image:'../asset/xidz-bot.png'},{title:'XDEV Tools',image:'../asset/xdev_tools.png'},{title:'Protocol Support',image:'../asset/protocol.png'},{title:'Netmonitor Liquid Ui',image:'../asset/netmonitor_liquid.png'},{title:'Netmonitor Glasx Ui ',image:'../asset/netmonitor_glasx.png'},{title:'Netmonitor Glasx Ui ',image:'../asset/netmonitor_glassx.png'},{title:'Netmonitor Neo Ui ',image:'../asset/netmonitor_neo.png'},{title:'Netmonitor Neox Ui ',image:'../asset/netmonitor_neox.png'},{title:'Netmonitor Nixe Ui ',image:'../asset/netmonitor_nixe.png'},{title:'Tema Argon Light',image:'../asset/argon_light.png'},{title:'Tema Argon Dark',image:'../asset/argon_dark.png'},{title:'Tema Argon Glass',image:'../asset/argon_glass.png'},{title:'Login Glass',image:'../asset/login_glass.png'},{title:'Login Gradien',image:'../asset/login_gradien.png'},{title:'Login Light',image:'../asset/login_light.png'},{title:'Login Liquid',image:'../asset/login_liquid.png'},{title:'Login Dark',image:'../asset/login_dark.png'},{title:'Login Neon',image:'../asset/login_neon.png'},{title:'Login Matrix',image:'../asset/login_matrix.png'},{title:'Login Curve',image:'../asset/login_curve.png'},{title:'Login Ocean',image:'../asset/login_ocean.png'},{title:'Login Pulse',image:'../asset/login_pulse.png'}]},devices:{items:[{title:'Amlogic s905 Series',list:['Amlogic s905 MXQ-Pro+','Amlogic s905 Beelink-Mini','Amlogic s905lb Q96-Mini','Amlogic s905w TX3-Mini','Amlogic s905w X96-Mini','Amlogic s905w X96W','Amlogic s905x B860H','Amlogic s905x HG680P']},{title:'Amlogic s905x2 Series',list:['Amlogic s905x2 B860Hv5','Amlogic s905x2 HG680-FJ','Amlogic s905x2 X96Max-v2Gb','Amlogic s905x2 X96Max-v4Gb']},{title:'Amlogic s905x3 Series',list:['Amlogic s905x3 HK1-Vontar-X3','Amlogic s905x3 X96Air_100Mb','Amlogic s905x3 X96Air_1Gb','Amlogic s905x3 X96Max+_100Mb','Amlogic s905x3 X96Max+_1Gb','Amlogic s905x3 H96-Max-X3']},{title:'Amlogic Other Series',list:['Amlogic s905x4 Ax810','Amlogic s905x4 Advan-At01','Amlogic s912 Nexbox-A1-A95X','Amlogic s912 Nexbox-A95X-A2','Amlogic s922x GT-King-Pro']},{title:'Orangepi Series',list:['Orangepi Pc 2','Orangepi R1 Plus','Orangepi R1 Plus LTS','Orangepi 3B','Orangepi 5B','Orangepi 5 Plus','Orangepi Zero Plus','Orangepi Zero Plus 2','Orangepi 3','Orangepi 3 LTS','Orangepi Zero 2','Orangepi Zero 3']},{title:'Raspberry Pi Series',list:['Raspberry Pi B','Raspberry Pi 2B','Raspberry Pi 3B','Raspberry Pi 4B','Raspberry Pi 5']},{title:'Nanopi Series',list:['Nanopi-r2c','Nanopi-r2c Plus','Nanopi-r2s','Nanopi-r2s Plus','Nanopi-r3s','Nanopi-r4s','Nanopi-r5s']},{title:'Rockchip Series',list:['Rk3318-BOX','Firefly-Rk3328','Rk3399-King3399','Rk3566-Panther-X2','Rk3588-Rock5B','Rk3576-NanoPi M5','Rk3528-H96 Max-M2','Widora Mangopi M28C','Widora Mangopi M28K']},{title:'X86 Series',list:['X86-32','X86-64']}]}};
+const emptyStateHTML=`<div class="empty-state"><style>@keyframes globeSpin{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}@keyframes globeFloat{0%,100%{filter:drop-shadow(0 14px 20px rgba(15,23,42,.12))}50%{filter:drop-shadow(0 18px 24px rgba(15,23,42,.18))}}.empty-state{grid-column:1/-1;width:100%;height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}.globe-stage{width:126px;height:126px;display:grid;place-items:center;perspective:700px}.globe-wrap{width:112px;height:112px;display:grid;place-items:center;transform-style:preserve-3d;animation:globeSpin 14s linear infinite,globeFloat 3.8s ease-in-out infinite}.globe-svg{width:112px;height:112px;overflow:visible}.globe-surface{fill:url(#globeGradient);stroke:var(--accent);stroke-width:1.5}.globe-grid{fill:none;stroke:rgba(255,255,255,.42);stroke-width:1.25}.globe-land{fill:var(--accent);opacity:.9}.globe-shine{fill:rgba(255,255,255,.24)}.coming-label{display:flex;width:min(94vw,620px);min-height:2.8em;align-items:center;justify-content:center;text-align:center;color:var(--text-muted);font-weight:600;font-size:clamp(10px,2.8vw,14px);letter-spacing:.55px;line-height:1.35;white-space:normal;overflow:visible;overflow-wrap:anywhere;opacity:1;caret-color:var(--accent);text-shadow:0 1px 2px rgba(0,0,0,.08)}</style><div class="globe-stage"><div class="globe-wrap"><svg class="globe-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><radialGradient id="globeGradient" cx="32%" cy="27%" r="72%"><stop offset="0%" stop-color="var(--accent-hover)"/><stop offset="38%" stop-color="var(--accent)"/><stop offset="78%" stop-color="var(--badge-bg)"/><stop offset="100%" stop-color="var(--bg-search)"/></radialGradient><clipPath id="globeClip"><circle cx="60" cy="60" r="49"/></clipPath></defs><circle cx="60" cy="60" r="49" class="globe-surface"/><g clip-path="url(#globeClip)"><ellipse cx="60" cy="60" rx="19" ry="49" class="globe-grid"/><ellipse cx="60" cy="60" rx="34" ry="49" class="globe-grid"/><ellipse cx="60" cy="60" rx="43" ry="49" class="globe-grid"/><path d="M11 60h98M15 43c25 10 65 10 90 0M15 77c25-10 65-10 90 0M22 25c22 8 54 8 76 0M22 95c22-8 54-8 76 0" class="globe-grid"/><path d="M31 34l10-7 13 3 5 8-10 5-5 11-11-4-3-9-9-3zM67 26l10 3 5 9 9 4-4 10-8 2-8-6-6-9zM59 67l12-5 10 6-3 10-11 5-7-7zM28 72l9 1 8 9-5 8-11-4-5-9z" class="globe-land"/><ellipse cx="43" cy="36" rx="19" ry="11" class="globe-shine"/></g><circle cx="60" cy="60" r="49" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1"/></svg></div></div><span class="coming-label" id="comingMessage">COMINGSOON</span></div>`;
+let comingMessageTimer=0;
+let comingMessageToken=0;
+
+function stopComingMessage(){
+if(comingMessageTimer){
+clearTimeout(comingMessageTimer);
+comingMessageTimer=0;
+}
+comingMessageToken++;
+}
+
+function startComingMessage(){
+stopComingMessage();
+const element=document.getElementById('comingMessage');
+if(!element)return;
+const messages=['COMINGSOON','TIDAK MENERIMA DONASI / DONATE','DONASIKAN KE ORANG YANG MEMBUTUHKAN','TERIMAKASIH BANYAK'];
+const token=comingMessageToken;
+let index=0;
+let charIndex=0;
+let deleting=false;
+let pauseUntil=0;
+const typeSpeed=180;
+const deleteSpeed=95;
+const pauseFull=1800;
+const pauseEmpty=500;
+const step=()=>{
+if(token!==comingMessageToken||!document.getElementById('comingMessage'))return;
+const current=messages[index];
+if(pauseUntil>Date.now()){
+comingMessageTimer=setTimeout(step,80);
+return;
+}
+if(!deleting){
+charIndex++;
+element.textContent=current.slice(0,charIndex);
+if(charIndex>=current.length){
+ pauseUntil=Date.now()+pauseFull;
+ deleting=true;
+}
+comingMessageTimer=setTimeout(step,typeSpeed);
+return;
+}
+charIndex--;
+element.textContent=current.slice(0,charIndex);
+if(charIndex<=0){
+ index=(index+1)%messages.length;
+ deleting=false;
+ pauseUntil=Date.now()+pauseEmpty;
+}
+comingMessageTimer=setTimeout(step,deleteSpeed);
+};
+element.textContent='';
+step();
+}
+
+let networkString="";
+let userIP=null;
+let userCountry="UNKNOWN";
+let userISP="UNKNOWN";
+let userASN="UNKNOWN";
+const apiURLs=["../silent.json","../silent1.json","../silent2.json","../silent3.json","../silent4.json","../silent5.json","../silent6.json","../silent7.json","../silent8.json","../silent9.json","../silent10.json"];
+let builds=[];
+let currentPaginatedBuilds=[];
+let currentDeviceFilter=[];
+let currentCategoryFilter=[];
+let currentVersionFilter=[];
+let currentSearchQuery="";
+let currentPage=1;
+const itemsPerPage=20;
+const downloadCountCache=new Map();
+const CACHE_DURATION=5*60*1000;
+const envxyyraa=["RE9OQVNJ","RE9OQVRF"];
+let activeEncodedPassword=envxyyraa[Math.floor(Math.random()*envxyyraa.length)];
+let pendingDownloadUrl="";
+let failedAttempts=0;
+let lockoutUntil=0;
+
+class GitHubAPILimiter{
+constructor(){
+this.requests=[];
+this.maxRequests=60;
+this.timeWindow=60*60*1000;
+}
+canMakeRequest(){
+const now=Date.now();
+this.requests=this.requests.filter(time=>now-time<this.timeWindow);
+return this.requests.length<this.maxRequests;
+}
+recordRequest(){
+this.requests.push(Date.now());
+}
+}
+
+const apiLimiter=new GitHubAPILimiter();
+
+const themeOrder=['dark','light','metal','glass','luxury-black','neo-light','neo-dark','neo-brutal-light'];
+const themeClasses={dark:'dark-theme',light:'light-theme',metal:'liquid-metal-theme',glass:'liquid-glass-theme','luxury-black':'luxury-black-theme','neo-light':'neo-light-theme','neo-dark':'neo-dark-theme','neo-brutal-light':'neo-brutal-light-theme'};
+const themeLabels={dark:'Tema Gelap',light:'Tema Terang',metal:'Liquid Metal',glass:'Liquid Glass','luxury-black':'Luxury Black','neo-light':'Neomorph Light','neo-dark':'Neomorph Dark','neo-brutal-light':'Neobrutal Light'};
+const themeIcons={dark:'moonIcon',light:'sunIcon',metal:'metalIcon',glass:'glassIcon','luxury-black':'luxuryBlackIcon','neo-light':'neoLightIcon','neo-dark':'neoDarkIcon','neo-brutal-light':'neoBrutalLightIcon'};
+
+function getCurrentTheme(){
+const body=document.body;
+if(body.classList.contains('luxury-black-theme'))return 'luxury-black';
+if(body.classList.contains('liquid-glass-theme'))return 'glass';
+if(body.classList.contains('liquid-metal-theme'))return 'metal';
+if(body.classList.contains('light-theme'))return 'light';
+if(body.classList.contains('neo-light-theme'))return 'neo-light';
+if(body.classList.contains('neo-dark-theme'))return 'neo-dark';
+if(body.classList.contains('neo-brutal-light-theme'))return 'neo-brutal-light';
+return 'dark';
+}
+
+function applyTheme(theme){
+if(!themeOrder.includes(theme))theme='luxury-black';
+const body=document.body;
+body.classList.remove('dark-theme','light-theme','liquid-metal-theme','liquid-glass-theme','luxury-black-theme','neo-light-theme','neo-dark-theme','neo-brutal-light-theme');
+body.classList.add(themeClasses[theme]);
+Object.entries(themeIcons).forEach(([key,id])=>{
+const icon=document.getElementById(id);
+if(icon)icon.style.display=key===theme?'block':'none';
+});
+const button=document.getElementById('themeBtn');
+button.title=themeLabels[theme];
+button.setAttribute('aria-label',`Ganti tema, ${themeLabels[theme]}`);
+localStorage.setItem('theme',theme);
+}
+
+function toggleTheme(){
+const current=getCurrentTheme();
+const currentIndex=themeOrder.indexOf(current);
+const next=themeOrder[(currentIndex+1)%themeOrder.length];
+applyTheme(next);
+}
+
+function startBrandTitleCycle(){
+const title=document.getElementById('brandTitle');
+if(!title)return;
+const sequence=[
+{text:'WELCOME',typing:true,hold:2500},
+{text:'XIDZs-WRT',typing:true,hold:3000},
+{text:'INDONESIA',typing:false,hold:2700}
+];
+let index=-1;
+let phase=0;
+const showNext=()=>{
+index=(index+1)%sequence.length;
+const item=sequence[index];
+phase++;
+const token=phase;
+title.classList.remove('fading','typing');
+title.style.width=item.typing?'0':'9.5ch';
+title.textContent='';
+requestAnimationFrame(()=>{
+if(token!==phase)return;
+title.textContent=item.text;
+if(item.typing)title.classList.add('typing');
+setTimeout(()=>{
+if(token!==phase)return;
+title.classList.add('fading');
+setTimeout(()=>{if(token===phase)showNext();},900);
+},item.hold);
+});
+};
+showNext();
+}
+
+function loadSavedTheme(){
+const savedTheme=localStorage.getItem('theme');
+applyTheme(themeOrder.includes(savedTheme)?savedTheme:'luxury-black');
+}
+
+const networkProviders=[
+{
+name:'ipapi.co',
+url:'https://ipapi.co/json/',
+parse:data=>({
+ip:data?.ip,
+country:data?.country_name||data?.country,
+isp:data?.org||data?.isp,
+asn:data?.asn
+})
+},
+{
+name:'ipwhois.app',
+url:'https://ipwhois.app/json/?format=json',
+parse:data=>({
+ip:data?.ip,
+country:data?.country,
+isp:data?.isp||data?.org,
+asn:data?.asn
+})
+},
+{
+name:'ip.sb',
+url:'https://api.ip.sb/geoip',
+parse:data=>({
+ip:data?.ip,
+country:data?.country,
+isp:data?.isp||data?.organization,
+asn:data?.asn?`AS${String(data.asn).replace(/^AS/i,'')}`:undefined
+})
+},
+{
+name:'ipapi.is',
+url:'https://api.ipapi.is/',
+parse:data=>({
+ip:data?.ip,
+country:data?.location?.country_name||data?.location?.country||data?.country,
+isp:data?.company?.name||data?.company?.org||data?.asn?.org||data?.org,
+asn:data?.asn?.asn?`AS${String(data.asn.asn).replace(/^AS/i,'')}`:(data?.asn?.number?`AS${String(data.asn.number).replace(/^AS/i,'')}`:data?.asn?.asn)
+})
+},
+{
+name:'ipinfo.io',
+url:'https://ipinfo.io/json',
+parse:data=>({
+ip:data?.ip,
+country:data?.country,
+isp:data?.org,
+asn:(typeof data?.org==='string'&&data.org.match(/\bAS\d+\b/i))?data.org.match(/\bAS\d+\b/i)[0]:undefined
+})
+}
+];
+
+function hasValue(value){
+return typeof value==='string'&&value.trim()!==''&&value.trim().toUpperCase()!=='UNKNOWN'||typeof value==='number';
+}
+
+function normalizeASN(value){
+if(!hasValue(value))return "UNKNOWN";
+const raw=String(value).trim().toUpperCase();
+if(raw.startsWith('AS'))return raw;
+const match=raw.match(/\b\d+\b/);
+return match?`AS${match[0]}`:raw;
+}
+
+function normalizeNetworkResult(result){
+return {
+ip:hasValue(result?.ip)?String(result.ip).trim():"",
+country:hasValue(result?.country)?String(result.country).trim().toUpperCase():"",
+isp:hasValue(result?.isp)?String(result.isp).trim().toUpperCase():"",
+asn:normalizeASN(result?.asn)
+};
+}
+
+function maskNetworkIP(ip){
+if(!ip||ip==="UNKNOWN")return "UNKNOWN";
+if(ip.includes(':'))return ip.split(':').slice(0,3).join(':')+':xxxx:xxxx';
+const parts=ip.split('.');
+return parts.length===4?`${parts[0]}.${parts[1]}.xxx.xx`:ip;
+}
+
+function updateNetworkDisplay(){
+const maskedIP=maskNetworkIP(userIP);
+networkString=`IP : ${maskedIP} | COUNTRY : ${userCountry} | ISP : ${userISP} | ASN : ${userASN}`;
+renderNetworkInfo(maskedIP,userCountry,userISP,userASN);
+}
+
+async function fetchNetworkProvider(provider,signal){
+try{
+const response=await fetch(provider.url,{cache:'no-store',signal,headers:{Accept:'application/json'}});
+if(!response.ok)return null;
+const data=await response.json();
+if(!data||data.success===false||data.status==='fail')return null;
+return normalizeNetworkResult(provider.parse(data));
+}catch(error){
+return null;
+}
+}
+
+function renderNetworkInfo(maskedIP,country,isp,asn){
+const netEl=document.getElementById("networkInfo");
+if(!netEl)return;
+const items=[
+['ip','IP',maskedIP,'Salin alamat IP'],
+['country','COUNTRY',country,'Salin country'],
+['isp','ISP',isp,'Salin ISP'],
+['asn','ASN',asn,'Salin ASN']
+];
+netEl.innerHTML=items.map((item,index)=>{
+const [field,label,value,title]=item;
+const part=`<span class="network-part" data-copy-field="${field}" title="${title}" role="button" tabindex="0">${label} : ${value}</span>`;
+return index<items.length-1?`${part}<span class="network-separator"> | </span>`:part;
+}).join('');
+netEl.querySelectorAll('.network-part').forEach(part=>{
+const action=event=>{
+event.preventDefault();
+copyNetworkField(part.dataset.copyField,part);
+};
+part.addEventListener('pointerup',action);
+part.addEventListener('keydown',event=>{
+if(event.key==='Enter'||event.key===' '){
+event.preventDefault();
+copyNetworkField(part.dataset.copyField,part);
+}
+});
+});
+}
+
+async function getUserIP(){
+const cacheKey='xidz_network_info_v4';
+const cacheTTL=60*1000;
+let cached=null;
+try{
+cached=JSON.parse(sessionStorage.getItem(cacheKey)||'null');
+}catch(error){
+cached=null;
+}
+if(cached&&cached.timestamp&&Date.now()-cached.timestamp<cacheTTL){
+userIP=cached.ip||"UNKNOWN";
+userCountry=cached.country||"UNKNOWN";
+userISP=cached.isp||"UNKNOWN";
+userASN=normalizeASN(cached.asn);
+updateNetworkDisplay();
+}
+let result={ip:"",country:"",isp:"",asn:"UNKNOWN"};
+const controller=new AbortController();
+const timeout=setTimeout(()=>controller.abort(),2500);
+try{
+await Promise.allSettled(networkProviders.map(async provider=>{
+const data=await fetchNetworkProvider(provider,controller.signal);
+if(!data)return;
+let changed=false;
+if(hasValue(data.ip)&&!result.ip){result.ip=data.ip;changed=true;}
+if(hasValue(data.country)&&!result.country){result.country=data.country;changed=true;}
+if(hasValue(data.isp)&&!result.isp){result.isp=data.isp;changed=true;}
+if(result.asn==="UNKNOWN"&&hasValue(data.asn)){result.asn=normalizeASN(data.asn);changed=true;}
+if(changed){
+userIP=result.ip||"UNKNOWN";
+userCountry=result.country||"UNKNOWN";
+userISP=result.isp||"UNKNOWN";
+userASN=normalizeASN(result.asn);
+updateNetworkDisplay();
+}
+}));
+}finally{
+clearTimeout(timeout);
+}
+if(!result.ip&&!result.country&&!result.isp&&result.asn==="UNKNOWN"){
+result={
+ip:cached?.ip||"",
+country:cached?.country||"",
+isp:cached?.isp||"",
+asn:normalizeASN(cached?.asn)
+};
+}
+userIP=result.ip||"UNKNOWN";
+userCountry=result.country||"UNKNOWN";
+userISP=result.isp||"UNKNOWN";
+userASN=normalizeASN(result.asn);
+updateNetworkDisplay();
+try{
+sessionStorage.setItem(cacheKey,JSON.stringify({
+timestamp:Date.now(),
+ip:userIP,
+country:userCountry,
+isp:userISP,
+asn:userASN
+}));
+}catch(error){}
+}
+
+async function copyNetworkField(field,element){
+const values={ip:userIP,country:userCountry,isp:userISP,asn:userASN};
+const value=values[field];
+if(!value||value==="UNKNOWN")return;
+const copyText=async text=>{
+if(navigator.clipboard&&window.isSecureContext){
+await navigator.clipboard.writeText(text);
+return;
+}
+const area=document.createElement("textarea");
+area.value=text;
+area.setAttribute("readonly","");
+area.style.position="fixed";
+area.style.left="-9999px";
+area.style.top="0";
+area.style.opacity="0";
+area.style.pointerEvents="none";
+document.body.appendChild(area);
+area.focus();
+area.select();
+area.setSelectionRange(0,area.value.length);
+const copied=document.execCommand("copy");
+area.remove();
+if(!copied)throw new Error("Copy failed");
+};
+try{
+await copyText(value);
+const labels={ip:"IP Tersalin!",country:"Country Tersalin!",isp:"ISP Tersalin!",asn:"ASN Tersalin!"};
+const original=element.textContent;
+element.classList.add("copied");
+element.textContent=labels[field];
+setTimeout(()=>{
+element.textContent=original;
+element.classList.remove("copied");
+},1200);
+}catch(error){}
+}
+
+function viewImage(src){
+document.getElementById('imageViewerImg').src=src;
+document.getElementById('imageViewer').style.display='flex';
+}
+
+async function getGitHubDownloadCount(repoOwner,repoName,assetId){
+if(!apiLimiter.canMakeRequest())return null;
+try{
+apiLimiter.recordRequest();
+const response=await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/releases`);
+if(!response.ok)throw new Error();
+const releases=await response.json();
+for(const release of releases){
+if(release.assets){
+const asset=release.assets.find(a=>a.id===assetId);
+if(asset)return asset.download_count;
+}
+}
+return null;
+}catch(error){
+return null;
+}
+}
+
+async function getCachedDownloadCount(repoOwner,repoName,assetId){
+const cacheKey=`github_count_${assetId}`;
+const cached=downloadCountCache.get(cacheKey);
+if(cached&&(Date.now()-cached.timestamp)<CACHE_DURATION)return cached.count;
+const count=await getGitHubDownloadCount(repoOwner,repoName,assetId);
+if(count!==null){
+downloadCountCache.set(cacheKey,{count:count,timestamp:Date.now()});
+return count;
+}
+return cached?cached.count:null;
+}
+
+function cleanFileName(filename){
+if(filename.toLowerCase().includes("modsdcard")){
+return filename.replace(/-\d{8}-MODSDCARD\.(img\.gz|tar\.gz|tar\.xz|bin\.gz|img|bin|gz|tar|zip|xz|7z|bz2)$/gi,"-MODSDCARD");
+}
+return filename.replace(/-\d{8}\.(img\.gz|tar\.gz|tar\.xz|bin\.gz|img|bin|gz|tar|zip|xz|7z|bz2)$/gi,"");
+}
+
+function getFirmwareCategory(filename){
+const lower=filename.toLowerCase();
+if(lower.includes("snapshot"))return "snapshot";
+if(lower.includes("immortalwrt")||lower.includes("immortal"))return "immortalwrt";
+return "openwrt";
+}
+
+function getDeviceCategory(filename){
+const lower=filename.toLowerCase();
+if(lower.includes("orangepi")||lower.includes("orange-pi"))return "orangepi";
+if(lower.includes("mangopi")||lower.includes("mango-pi")||lower.includes("widora"))return "mangopi";
+if(lower.includes("nanopi")||lower.includes("nano-pi"))return "nanopi";
+if(lower.includes("raspberry")||lower.includes("rpi")||lower.includes("bcm27"))return "raspberrypi";
+if(lower.includes("x86")||lower.includes("x86-64")||lower.includes("amd64")||lower.includes("x86-32")||lower.includes("386")||lower.includes("i386")||lower.includes("i386_pentium4"))return "x86";
+if(lower.includes("amlogic")||lower.includes("s905")||lower.includes("s912")||lower.includes("s922")||lower.includes("a311d")||lower.includes("hg680p")||lower.includes("b860h")||lower.includes("tx3")||lower.includes("h96")||lower.includes("x98h")||lower.includes("rk35")||lower.includes("rk33")||lower.includes("tx6"))return "amlogic";
+}
+
+function extractKernelVersion(filename){
+const lower=filename.toLowerCase();
+const match=lower.match(/(?:k|kernel-?)(5\.\d+(?:\.\d+)?|6\.\d+(?:\.\d+)?)/);
+return match&&match[1]?match[1]:"";
+}
+
+function shortenKernel(k){
+const match=k.match(/^(\d+\.\d+)/);
+return match?match[1]:k;
+}
+
+function isAmlogicWifiVariant(filename){
+const lower=String(filename||'').toLowerCase();
+return lower.includes('wifion')||lower.includes('wifioff');
+}
+
+function getKernelDetailLabel(build){
+const lower=String(build?.originalName||'').toLowerCase();
+return lower.includes('wifioff')?'Kernel Flippy':'Kernel Stable';
+}
+
+function extractTunnelType(filename){
+const lower=filename.toLowerCase();
+if(lower.includes("no-tunnel"))return "No-tunnel";
+let t=[];
+if(lower.includes("openclash"))t.push("OpenClash");
+if(lower.includes("nikki"))t.push("Nikki");
+if(lower.includes("passwallssh"))t.push("Passwallssh");
+else if(lower.includes("passwall"))t.push("Passwall");
+if(lower.includes("fusiontunx"))t.push("Fusiontunx");
+if(lower.includes("qtun"))t.push("Qtun");
+if(lower.includes("clashoo"))t.push("Clashoo");
+return t.length>0?t.join(" - "):"Unknown/Default";
+}
+
+function formatFileSize(bytes){
+if(bytes===0)return '0 B';
+const k=1024;
+const sizes=['B','KB','MB','GB','TB'];
+const i=Math.floor(Math.log(bytes)/Math.log(k));
+return parseFloat((bytes/Math.pow(k,i)).toFixed(2))+' '+sizes[i];
+}
+
+function formatTotalSize(bytes){
+if(!Number.isFinite(bytes)||bytes<=0)return '0 GB';
+const gb=bytes/Math.pow(1024,3);
+return `${gb.toFixed(1).replace(/\.0$/,'')} GB`;
+}
+
+function formatDownloadCount(count){
+if(count>=1000000)return (count/1000000).toFixed(1)+'M';
+if(count>=1000)return (count/1000).toFixed(1)+'K';
+return count.toString();
+}
+
+function formatDate(dateString){
+if(!dateString)return 'Unknown';
+const d=new Date(dateString);
+if(isNaN(d.getTime()))return 'Unknown';
+const dd=d.getDate().toString().padStart(2,'0');
+const mm=(d.getMonth()+1).toString().padStart(2,'0');
+const yyyy=d.getFullYear();
+return `${dd}/${mm}/${yyyy}`;
+}
+
+function getLocalDownloadCount(firmwareUrl){
+const key=`local_download_count_${firmwareUrl}`;
+const count=localStorage.getItem(key);
+return count?parseInt(count):0;
+}
+
+function incrementLocalDownloadCount(firmwareUrl){
+const key=`local_download_count_${firmwareUrl}`;
+const currentCount=getLocalDownloadCount(firmwareUrl);
+localStorage.setItem(key,(currentCount+1).toString());
+}
+
+async function adjustDownloadCount(firmwareUrl,originalCount,repoOwner,repoName,assetId){
+const localCount=getLocalDownloadCount(firmwareUrl);
+if(assetId&&repoOwner&&repoName){
+const githubCount=await getCachedDownloadCount(repoOwner,repoName,assetId);
+if(githubCount!==null)return githubCount+localCount;
+}
+return originalCount+localCount;
+}
+
+function extractRepoInfo(url){
+try{
+const urlObj=new URL(url);
+if(urlObj.hostname==='github.com'){
+const pathParts=urlObj.pathname.split('/');
+if(pathParts.length>=5&&pathParts[3]==='releases'){
+return {owner:pathParts[1],name:pathParts[2]};
+}
+}
+}catch(error){}
+return {owner:null,name:null};
+}
+
+async function fetchFromURL(url){
+try{
+const separator=url.includes('?')?'&':'?';
+const res=await fetch(`${url}${separator}_=${Date.now()}`,{
+cache:"no-store",
+headers:{Accept:'application/json,text/plain,*/*'}
+});
+if(!res.ok)return null;
+const content=(await res.text()).trim();
+if(!content)return null;
+let releases=null;
+try{
+releases=JSON.parse(content);
+}catch(error){
+try{
+const decodedContent=atob(content);
+releases=JSON.parse(decodedContent);
+}catch(decodeError){
+return null;
+}
+}
+if(!releases||releases.message||!Array.isArray(releases))return null;
+return releases;
+}catch(error){
+return null;
+}
+}
+
+async function loadData(){
+try{
+const allReleases=[];
+const fetchPromises=apiURLs.map(url=>fetchFromURL(url));
+const results=await Promise.allSettled(fetchPromises);
+results.forEach(result=>{
+if(result.status==='fulfilled'&&Array.isArray(result.value)&&result.value.length>0)allReleases.push(...result.value);
+});
+if(allReleases.length===0){
+document.getElementById("cardContainer").innerHTML=emptyStateHTML;
+startComingMessage();
+return;
+}
+builds=[];
+allReleases.forEach(rel=>{
+if(!rel.assets||rel.assets.length===0)return;
+rel.assets.forEach(asset=>{
+if(!asset.name||!asset.browser_download_url)return;
+if(!asset.name.match(/\.(img|bin|gz|tar|zip|xz|7z|img\.gz|tar\.gz|tar\.xz|bin\.gz|bz2)$/i))return;
+if(asset.name.toLowerCase().includes("rootfs"))return;
+const cleanName=cleanFileName(asset.name);
+if(!cleanName)return;
+const repoInfo=extractRepoInfo(asset.browser_download_url);
+builds.push({
+displayName:cleanName,
+originalName:asset.name,
+category:getFirmwareCategory(asset.name),
+device:getDeviceCategory(asset.name),
+kernel:extractKernelVersion(asset.name),
+url:asset.browser_download_url,
+assetId:asset.id,
+repoOwner:repoInfo.owner,
+repoName:repoInfo.name,
+size:asset.size||0,
+downloadCount:typeof asset.download_count==="number"?asset.download_count:0,
+publishedAt:rel.published_at||rel.created_at||null
+});
+});
+});
+const uniqueBuilds=[];
+const seen=new Set();
+builds.forEach(b=>{
+const n=b.displayName.toLowerCase().trim();
+if(!seen.has(n)&&n.length>0){
+seen.add(n);
+uniqueBuilds.push(b);
+}
+});
+builds=uniqueBuilds;
+renderList();
+}catch(error){
+document.getElementById("cardContainer").innerHTML=`<div style="text-align:center;color:#ef4444;padding:40px;grid-column:1/-1;">Error Loading Firmware</div>`;
+}
+}
+
+async function renderList(){
+const container=document.getElementById("cardContainer");
+const firmwareCount=document.getElementById("firmwareCount");
+const downloadCountTotal=document.getElementById("downloadCountTotal");
+const sizeTotal=document.getElementById("sizeTotal");
+container.style.opacity='0.72';
+container.innerHTML="";
+let filtered=builds;
+if(currentDeviceFilter.length>0)filtered=filtered.filter(b=>currentDeviceFilter.includes(b.device));
+if(currentCategoryFilter.length>0)filtered=filtered.filter(b=>currentCategoryFilter.includes(b.category));
+if(currentVersionFilter.length>0)filtered=filtered.filter(b=>currentVersionFilter.some(version=>b.originalName.includes(version)));
+if(currentSearchQuery){
+filtered=filtered.filter(b=>b.displayName.toLowerCase().includes(currentSearchQuery.toLowerCase()));
+}
+filtered.sort((a,b)=>new Date(b.publishedAt||0)-new Date(a.publishedAt||0));
+let totalDownloads=0;
+let totalSize=0;
+filtered.forEach(b=>{totalDownloads+=(b.downloadCount||0)+getLocalDownloadCount(b.url);totalSize+=(b.size||0);});
+if(firmwareCount)firmwareCount.textContent=new Intl.NumberFormat('id-ID').format(filtered.length);
+if(downloadCountTotal)downloadCountTotal.textContent=new Intl.NumberFormat('id-ID').format(totalDownloads);
+if(sizeTotal)sizeTotal.textContent=formatTotalSize(totalSize);
+if(filtered.length===0){
+container.innerHTML=emptyStateHTML;
+startComingMessage();
+document.getElementById("paginationContainer").innerHTML="";
+container.style.opacity='1';
+return;
+}
+stopComingMessage();
+const totalPages=Math.ceil(filtered.length/itemsPerPage);
+if(currentPage>totalPages)currentPage=1;
+const paginated=filtered.slice((currentPage-1)*itemsPerPage,currentPage*itemsPerPage);
+currentPaginatedBuilds=paginated;
+const htmlStrings=paginated.map((b,index)=>{
+const adjustedDownloadCount=getLocalDownloadCount(b.url)+(b.downloadCount||0);
+const deviceNameMap={'amlogic':'Amlogic','mangopi':'Mangopi','orangepi':'Orangepi','nanopi':'Nanopi','raspberrypi':'Raspberry Pi','x86':'x86'};
+let prettyDeviceName=deviceNameMap[b.device]||b.device.toUpperCase();
+const tunnelInfo=extractTunnelType(b.originalName);
+const lname=b.originalName.toLowerCase();
+let extraStatus="";
+let filesystemStatus="";
+if(b.device==="x86"){
+if(lname.includes("x86-64")||lname.includes("amd64"))prettyDeviceName="x86-64";
+else if(lname.includes("x86-32")||lname.includes("i386"))prettyDeviceName="x86-32";
+extraStatus+=lname.includes("efi")?" | EFI":" | Non EFI";
+}
+if(b.device!=="amlogic"){
+if(lname.includes("squashfs"))filesystemStatus="Squashfs";
+else if(lname.includes("ext4"))filesystemStatus="Ext4";
+}else{
+if(lname.includes("wifion"))extraStatus=" | WIFION";
+else if(lname.includes("wifioff"))extraStatus=" | WIFIOFF";
+}
+const kernelBadge=b.kernel?`<span class="badge badge-kernel">Kernel ${shortenKernel(b.kernel)}</span>`:"";
+const filesystemBadge=filesystemStatus?`<span class="badge badge-filesystem">${filesystemStatus}</span>`:"";
+const hideAmlogicLabel=b.device==="amlogic"&&isAmlogicWifiVariant(b.originalName);
+const homeDeviceLabel=hideAmlogicLabel?"":prettyDeviceName;
+const homeSubtitle=[homeDeviceLabel,tunnelInfo,extraStatus.replace(/^\s*\|\s*/,"")].filter(Boolean).join(" | " );
+return `
+<div class="card">
+<div class="card-header">
+<div class="card-icon">
+<svg viewBox="0 0 24 24"><path d="M7 2h10a2 2 0 012 2v2h2v2h-2v2h2v2h-2v2h2v2h-2v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2H3v-2h2v-2H3v-2h2v-2H3V6h2V4a2 2 0 012-2zm0 4v12h10V6H7zm2 2h6v8H9V8z"/></svg>
+</div>
+<div class="card-title-area">
+<div class="card-title" title="${b.displayName}">${b.displayName}</div>
+<div class="card-subtitle">${homeSubtitle}</div>
+</div>
+<button class="card-info-btn" onclick="showFileInfo(${index})" title="Information File">
+<svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+</button>
+</div>
+<div class="card-badges">
+${kernelBadge}
+${filesystemBadge}
+<span class="badge badge-size">${formatFileSize(b.size)}</span>
+<span class="badge badge-downloads" data-download-asset="${b.assetId||''}">DL: ${formatDownloadCount(adjustedDownloadCount)}</span>
+<span class="badge badge-date">${/MODSDCARD/i.test(String(b.originalName||""))?"MODSDCARD":formatDate(b.publishedAt)}</span>
+</div>
+<button class="btn-download" data-download-button="true" onclick="handleDownload('${b.url}')">
+<svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg><span class="download-label">Download</span>
+</button>
+</div>
+`;
+});
+container.innerHTML=htmlStrings.join('');
+renderPagination(totalPages);
+container.style.opacity='1';
+updateDownloadTimerState();
+refreshVisibleDownloadCounts(paginated);
+}
+
+
+async function refreshVisibleDownloadCounts(items){
+const pending=items.filter(b=>b.assetId&&b.repoOwner&&b.repoName);
+if(pending.length===0)return;
+await Promise.all(pending.map(async b=>{
+const count=await adjustDownloadCount(b.url,b.downloadCount,b.repoOwner,b.repoName,b.assetId);
+const badge=document.querySelector(`[data-download-asset="${String(b.assetId).replace(/"/g,'')}"]`);
+if(badge)badge.textContent=`DL: ${formatDownloadCount(count)}`;
+}));
+}
+
+function renderPagination(totalPages){
+const paginationContainer=document.getElementById("paginationContainer");
+if(totalPages<=1){
+paginationContainer.innerHTML="";
+return;
+}
+let html=`<button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage===1?'disabled':''}>&lt;</button>`;
+let startPage=Math.max(1,currentPage-2);
+let endPage=Math.min(totalPages,currentPage+2);
+if(startPage>1){
+html+=`<button class="page-btn" onclick="goToPage(1)">1</button>`;
+if(startPage>2){
+html+=`<span style="color:var(--text-muted);margin:0 2px;border:none;background:transparent;">...</span>`;
+}
+}
+for(let i=startPage;i<=endPage;i++){
+html+=`<button class="page-btn ${currentPage===i?'active':''}" onclick="goToPage(${i})">${i}</button>`;
+}
+if(endPage<totalPages){
+if(endPage<totalPages-1){
+html+=`<span style="color:var(--text-muted);margin:0 2px;border:none;background:transparent;">...</span>`;
+}
+html+=`<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+}
+html+=`<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>&gt;</button>`;
+paginationContainer.innerHTML=html;
+}
+
+function goToPage(page){
+if(page<1)return;
+currentPage=page;
+renderList();
+window.scrollTo({top:0,behavior:'smooth'});
+}
+
+let lockoutTimerId=0;
+
+function getLockoutUntil(){
+return parseInt(localStorage.getItem('auth_lockout'))||0;
+}
+
+function updateAuthButtonState(){
+const loginBtn=document.getElementById('loginBtn');
+const loginLabel=document.getElementById('loginLabel');
+const authKey=document.getElementById('authKey');
+if(!loginBtn)return;
+const remaining=Math.max(0,getLockoutUntil()-Date.now());
+if(remaining>0){
+const seconds=Math.ceil(remaining/1000);
+loginBtn.disabled=true;
+loginBtn.classList.add('timer-active');
+if(loginLabel)loginLabel.textContent=`Login • ${seconds}s`;
+return;
+}
+loginBtn.classList.remove('timer-active');
+if(loginLabel)loginLabel.textContent='Login';
+loginBtn.disabled=authKey?authKey.value.trim()==='':true;
+}
+
+function updateDownloadTimerState(){
+const remaining=Math.max(0,getLockoutUntil()-Date.now());
+const active=remaining>0;
+const seconds=Math.ceil(remaining/1000);
+document.querySelectorAll('.btn-download[data-download-button="true"]').forEach(button=>{
+const label=button.querySelector('.download-label');
+if(!label)return;
+button.classList.toggle('timer-active',active);
+label.textContent=active?`Download • ${seconds}s`:'Download';
+});
+}
+
+function updateLockoutTimer(){
+updateAuthButtonState();
+updateDownloadTimerState();
+if(getLockoutUntil()<=Date.now()&&lockoutTimerId){
+clearInterval(lockoutTimerId);
+lockoutTimerId=0;
+}
+}
+
+function startLockoutTimer(){
+if(lockoutTimerId)return;
+lockoutTimerId=setInterval(updateLockoutTimer,500);
+updateLockoutTimer();
+}
+
+function handleDownload(url){
+pendingDownloadUrl=url;
+document.getElementById('authKey').value="";
+document.getElementById('loginBtn').disabled=true;
+const msg=document.getElementById('authMessage');
+const now=Date.now();
+const lockout=parseInt(localStorage.getItem('auth_lockout'))||0;
+if(now<lockout){
+msg.style.color="var(--accent)";
+msg.textContent=`Timeout! Tunggu ${Math.ceil((lockout-now)/1000)} detik.`;
+startLockoutTimer();
+}else{
+msg.textContent="";
+updateAuthButtonState();
+}
+openModal('passwordModal');
+}
+
+function handleInfoAuth(){
+pendingDownloadUrl="INFO_MODAL";
+document.getElementById('authKey').value="";
+document.getElementById('loginBtn').disabled=true;
+const msg=document.getElementById('authMessage');
+const now=Date.now();
+const lockout=parseInt(localStorage.getItem('auth_lockout'))||0;
+if(now<lockout){
+msg.style.color="var(--accent)";
+msg.textContent=`Timeout! Tunggu ${Math.ceil((lockout-now)/1000)} detik.`;
+startLockoutTimer();
+}else{
+msg.textContent="";
+updateAuthButtonState();
+}
+openModal('passwordModal');
+}
+
+function submitAuth(){
+const msg=document.getElementById('authMessage');
+const now=Date.now();
+const lockout=parseInt(localStorage.getItem('auth_lockout'))||0;
+if(now<lockout){
+msg.style.color="var(--accent)";
+msg.textContent=`Timeout! Tunggu ${Math.ceil((lockout-now)/1000)} detik.`;
+startLockoutTimer();
+return;
+}
+const input=document.getElementById('authKey').value.trim().toUpperCase();
+if(btoa(input)===activeEncodedPassword){
+msg.style.color="#10b981";
+msg.textContent="Akses Succes!";
+localStorage.setItem('auth_fails',0);
+activeEncodedPassword=envxyyraa[Math.floor(Math.random()*envxyyraa.length)];
+setTimeout(()=>{
+if(pendingDownloadUrl==="INFO_MODAL"){
+openModal('infoModal');
+}else{
+incrementLocalDownloadCount(pendingDownloadUrl);
+window.open(pendingDownloadUrl,"_blank");
+closeAll();
+}
+},400);
+}else{
+let fails=parseInt(localStorage.getItem('auth_fails'))||0;
+fails++;
+activeEncodedPassword=envxyyraa[Math.floor(Math.random()*envxyyraa.length)];
+if(fails>=2){
+localStorage.setItem('auth_lockout',now+60000);
+localStorage.setItem('auth_fails',0);
+msg.style.color="var(--accent)";
+msg.textContent="Timeout 1 menit! Terlalu banyak gagal.";
+startLockoutTimer();
+}else{
+localStorage.setItem('auth_fails',fails);
+msg.style.color="var(--accent)";
+msg.textContent="Password Salah! Sisa 1 kali coba.";
+}
+}
+}
+
+function showFileInfo(index){
+const b=currentPaginatedBuilds[index];
+if(!b)return;
+const content=document.getElementById('fileInfoContent');
+content.innerHTML=`<ul>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Nama File Asli:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">${b.originalName}</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Perangkat:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">${b.device.toUpperCase()}</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Kernel:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">${getKernelDetailLabel(b)}</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Rootfs:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">1024 MB</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Ukuran File:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">${formatFileSize(b.size)}</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Tanggal Rilis:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">${formatDate(b.publishedAt)}</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Build By:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">xidz_x</span></li>
+</ul>`;
+openModal('fileInfoModal');
+}
+
+function openDynamicModal(type){
+const content=document.getElementById('dynamicModalContent');
+const title=document.getElementById('dynamicModalTitle');
+if(type==='preview'){
+title.textContent='Preview Tema & Fitur';
+let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">';
+contentData.preview.items.forEach(i=>{
+html+=`<div style="display:flex;flex-direction:column;gap:8px;align-items:center;background:var(--bg-pill);padding:12px;border-radius:var(--radius);border:1px solid var(--border-color);cursor:pointer;" onclick="viewImage('${i.image}')"><img src="${i.image}" style="width:100%;border-radius:var(--radius);object-fit:cover;" alt="${i.title}" loading="lazy"><span style="font-size:12px;font-weight:600;color:var(--text-main);text-align:center;">${i.title}</span></div>`;
+});
+html+='</div>';
+content.innerHTML=html;
+}else if(type==='devices'){
+title.textContent='Devices Support';
+let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;align-items:start;">';
+contentData.devices.items.forEach(i=>{
+html+=`<div><h3 style="color:var(--accent);font-size:14px;font-weight:600;margin-bottom:12px;border-bottom:1px solid var(--border-color);padding-bottom:8px;text-align:center;">${i.title}</h3><ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;">`;
+i.list.forEach(l=>{
+html+=`<li style="font-size:11px;color:var(--text-muted);font-weight:500;position:relative;padding-left:12px;background:none;border:none;"><span style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:4px;background:var(--accent);border-radius:50%;"></span>${l}</li>`;
+});
+html+='</ul></div>';
+});
+html+='</div>';
+content.innerHTML=html;
+}
+openModal('dynamicModal');
+}
+
+function setFilterState(groupSelector,valueKey,values){
+const selected=Array.isArray(values)?values:[];
+document.querySelectorAll(`${groupSelector} .filter-pill`).forEach(button=>{
+const value=button.dataset[valueKey];
+const isActive=selected.includes(value);
+button.classList.toggle("active",isActive);
+const label=button.dataset.label||button.textContent.replace(/×/g,"").trim();
+button.textContent=label;
+if(isActive){
+const clear=document.createElement("span");
+clear.className="filter-clear";
+clear.setAttribute("role","button");
+clear.setAttribute("tabindex","0");
+clear.setAttribute("aria-label",`Hapus filter ${label}`);
+clear.textContent="×";
+button.appendChild(clear);
+}
+});
+}
+
+function updateFilterState(stateKey,value){
+let target;
+if(stateKey==="currentDeviceFilter")target=currentDeviceFilter;
+else if(stateKey==="currentCategoryFilter")target=currentCategoryFilter;
+else target=currentVersionFilter;
+const index=target.indexOf(value);
+if(index===-1)target.push(value);
+else target.splice(index,1);
+}
+
+function getFilterState(stateKey){
+if(stateKey==="currentDeviceFilter")return currentDeviceFilter;
+if(stateKey==="currentCategoryFilter")return currentCategoryFilter;
+return currentVersionFilter;
+}
+
+function setupFilterGroup(groupSelector,valueKey,stateKey){
+document.querySelectorAll(`${groupSelector} .filter-pill`).forEach(btn=>{
+const handleFilterAction=event=>{
+const clear=event.target.closest(".filter-clear");
+if(clear){
+event.preventDefault();
+event.stopPropagation();
+const value=btn.dataset[valueKey];
+const state=getFilterState(stateKey);
+const index=state.indexOf(value);
+if(index!==-1)state.splice(index,1);
+setFilterState(groupSelector,valueKey,state);
+currentPage=1;
+renderList();
+return;
+}
+const value=btn.dataset[valueKey];
+if(btn.classList.contains("active"))return;
+updateFilterState(stateKey,value);
+setFilterState(groupSelector,valueKey,getFilterState(stateKey));
+currentPage=1;
+renderList();
+};
+btn.addEventListener("click",handleFilterAction);
+btn.addEventListener("keydown",event=>{
+if(event.key==="Enter"||event.key===" "){
+event.preventDefault();
+handleFilterAction(event);
+}
+});
+});
+}
+
+function setupFilters(){
+setupFilterGroup("#deviceFilters","device","currentDeviceFilter");
+setupFilterGroup("#categoryFilters","category","currentCategoryFilter");
+setupFilterGroup("#versionFilters","version","currentVersionFilter");
+setFilterState("#deviceFilters","device",currentDeviceFilter);
+setFilterState("#categoryFilters","category",currentCategoryFilter);
+setFilterState("#versionFilters","version",currentVersionFilter);
+const searchInput=document.getElementById("searchInput");
+let debounceTimer;
+searchInput.addEventListener("input",e=>{
+clearTimeout(debounceTimer);
+debounceTimer=setTimeout(()=>{
+currentSearchQuery=e.target.value;
+currentPage=1;
+renderList();
+},300);
+});
+}
+
+function toggleMenu(){
+const menu=document.getElementById('sideMenu');
+const overlay=document.getElementById('overlay');
+if(menu.classList.contains('open')){
+menu.classList.remove('open');
+overlay.classList.remove('show');
+document.body.style.overflow='';
+}else{
+menu.classList.add('open');
+overlay.classList.add('show');
+document.body.style.overflow='hidden';
+}
+}
+
+function openModal(modalId){
+closeAll();
+const modal=document.getElementById(modalId);
+const overlay=document.getElementById('overlay');
+if(modal&&overlay){
+overlay.classList.add('show');
+modal.classList.add('show');
+document.body.style.overflow='hidden';
+}
+}
+
+function closeAll(){
+document.getElementById('sideMenu').classList.remove('open');
+document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'));
+document.getElementById('overlay').classList.remove('show');
+document.body.style.overflow='';
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+loadSavedTheme();
+startBrandTitleCycle();
+setupFilters();
+startLockoutTimer();
+Promise.allSettled([getUserIP(),loadData()]);
+updateAuthButtonState();
+updateDownloadTimerState();
+});
+</script>
+</body>
+</html>

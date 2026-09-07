@@ -965,6 +965,55 @@ color:#10b981;
 background-color:var(--badge-bg-alt);
 color:var(--badge-text-alt);
 }
+ .btn-download{
+position:relative;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+.btn-download .download-content{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:7px;
+opacity:1;
+transform:translateY(0);
+transition:opacity .35s ease,transform .35s ease;
+}
+.btn-download .download-content svg{
+margin:0;
+flex:0 0 auto;
+}
+.btn-download .download-timer{
+position:absolute;
+left:50%;
+top:50%;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-width:64px;
+font-size:16px;
+font-weight:700;
+font-variant-numeric:tabular-nums;
+letter-spacing:.04em;
+line-height:1;
+opacity:0;
+transform:translate(-50%,-50%) translateY(3px);
+transition:opacity .35s ease,transform .35s ease;
+}
+.btn-download.timer-active .download-content{
+opacity:0;
+transform:translateY(3px);
+pointer-events:none;
+}
+.btn-download.timer-active .download-timer{
+opacity:1;
+transform:translate(-50%,-50%) translateY(0);
+}
+.btn-download.timer-active{
+pointer-events:none;
+}
+
 .btn-download{
 width:100%;
 background-color:var(--bg-pill);
@@ -1265,8 +1314,6 @@ box-shadow:calc(30 * var(--size)) 0 0 var(--color-1);
 50%{box-shadow:0 0 0 var(--color-1);margin-top:calc(-20 * var(--size));transform:translate(calc(15 * var(--size)),calc(15 * var(--size)));}
 100%{box-shadow:calc(30 * var(--size)) 0 0 var(--color-1);margin-top:0;}
 }
-#passwordModal{top:50% !important;left:50% !important;bottom:auto !important;transform:translate(-50%,-50%) scale(0.96) !important;width:85% !important;max-width:320px !important;border-radius:var(--radius) !important;padding:16px 16px 20px 16px !important;margin:0 !important;}
-#passwordModal.show{transform:translate(-50%,-50%) scale(1) !important;}
 ::-webkit-scrollbar{
 width:4px;
 }
@@ -1457,7 +1504,7 @@ border-radius:var(--radius);
 <li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Perintah Terminal:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Ketik xdev untuk XDEV Tools ( auto install + configurasi )</span></li>
 <li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Configurasi Bot:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Ketik xidz untuk Configurasi Bot Monitoring</span></li>
 <li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Qmodem For Modem Rakitan:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Qmodem Support Arch : x86-64 | aarch64-generic-armv8 | aarch64-cortex-a53 | aarch64-cortex-a72 | aarch64-cortex-a76 > all Os Version Support ( no tested )</span></li>
-<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">ModSdcard Version:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Gunakan versi ModSdcard untuk emmc error dan normal ( jangan di install ke EMMC )</span></li>
+<li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">ModSdcard Version:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Gunakan versi ModSdcard untuk emmc error dan normal ( jangan di install ke EMMC atau Flasdisk )</span></li>
 <li><strong style="color:var(--text-muted);font-size:11px;font-weight:600;">Informasi !!!:</strong><span style="display:block;margin-top:4px;color:var(--text-main);font-weight:500;">Saya Tidak Bisa Uji coba satu persatu devices karena terlalu banyak firmware dengan berbagai devices berbeda dan jika ada bug/eror di devices tertentu harap maklumi,terimakasih</span></li>
 </ul>
 </div>
@@ -1681,28 +1728,6 @@ border-radius:var(--radius);
 </div>
 <div class="modal-content" id="fileInfoContent"></div>
 </div>
-<div id="passwordModal" class="modal">
-<div class="modal-header" style="margin-bottom:14px;padding-bottom:8px;border-bottom:none;">
-<h2 style="font-size:16px;font-weight:600;">XIDZs-WRT LOGIN</h2>
-<button class="icon-btn" onclick="closeAll()" style="width:28px;height:28px;">
-<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-</button>
-</div>
-<div class="modal-content" style="text-align:center;">
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-<span style="color:var(--text-main);font-weight:600;font-size:13px;white-space:nowrap;width:45px;text-align:left;">USER :</span>
-<input type="text" id="authUser" value="xidz_x" class="search-input" style="flex:1;padding:10px 14px;margin:0;font-weight:500;font-size:13px;border-radius:var(--radius);" placeholder="Username">
-</div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-<span style="color:var(--text-main);font-weight:600;font-size:13px;white-space:nowrap;width:45px;text-align:left;">KEY :</span>
-<input type="password" id="authKey" class="search-input" placeholder="Password" style="flex:1;padding:10px 14px;margin:0;font-weight:500;font-size:13px;border-radius:var(--radius);" oninput="document.getElementById('loginBtn').disabled = this.value.trim() === ''">
-</div>
-<button id="loginBtn" class="btn-download" onclick="submitAuth()" disabled style="border-radius:var(--radius);padding:7px 8px;font-size:12px;font-weight:600;min-height:36px;">
-<svg viewBox="0 0 24 24" style="margin-right:6px;width:16px;height:16px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Login
-</button>
-<p id="authMessage" style="margin-top:12px;font-size:12px;font-weight:600;min-height:16px;"></p>
-</div>
-</div>
 <div id="dynamicModal" class="modal">
 <div class="modal-header">
 <h2 id="dynamicModalTitle">Title</h2>
@@ -1788,9 +1813,6 @@ let currentPage=1;
 const itemsPerPage=20;
 const downloadCountCache=new Map();
 const CACHE_DURATION=5*60*1000;
-const envxyyraa=["RE9OQVNJ","RE9OQVRF"];
-let activeEncodedPassword=envxyyraa[Math.floor(Math.random()*envxyyraa.length)];
-let pendingDownloadUrl="";
 let failedAttempts=0;
 let lockoutUntil=0;
 
@@ -2459,7 +2481,7 @@ ${filesystemBadge}
 <span class="badge badge-date">${/MODSDCARD/i.test(String(b.originalName||""))?"MODSDCARD":formatDate(b.publishedAt)}</span>
 </div>
 <button class="btn-download" data-download-button="true" onclick="handleDownload('${b.url}')">
-<svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg><span class="download-label">Download</span>
+<span class="download-content"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg><span class="download-label">Download</span></span><span class="download-timer" aria-live="polite"></span>
 </button>
 </div>
 `;
@@ -2519,17 +2541,10 @@ window.scrollTo({top:0,behavior:'smooth'});
 
 let lockoutTimerId=0;
 
-function getLockoutUntil(){
-return parseInt(localStorage.getItem('auth_lockout'))||0;
-}
 
 function getDownloadCooldownUntil(){
-const now=Date.now();
 const stored=parseInt(localStorage.getItem('download_cooldown_until'))||0;
-if(stored<=now)return 0;
-const until=Math.min(stored,now+60000);
-if(until!==stored)localStorage.setItem('download_cooldown_until',until);
-return until;
+return stored>Date.now()?stored:0;
 }
 
 function getDownloadCooldownRemaining(){
@@ -2537,124 +2552,58 @@ return Math.max(0,getDownloadCooldownUntil()-Date.now());
 }
 
 function startDownloadCooldown(){
-const until=Date.now()+60000;
+const until=Date.now()+240000;
 localStorage.setItem('download_cooldown_until',until);
 startLockoutTimer();
 return until;
 }
 
-function updateAuthButtonState(){
-const loginBtn=document.getElementById('loginBtn');
-const loginLabel=document.getElementById('loginLabel');
-const authKey=document.getElementById('authKey');
-if(!loginBtn)return;
-const remaining=Math.max(0,getLockoutUntil()-Date.now());
-if(remaining>0){
-const seconds=Math.ceil(remaining/1000);
-loginBtn.disabled=true;
-loginBtn.classList.add('timer-active');
-if(loginLabel)loginLabel.textContent=`Login • ${seconds}s`;
-return;
-}
-loginBtn.classList.remove('timer-active');
-if(loginLabel)loginLabel.textContent='Login';
-loginBtn.disabled=authKey?authKey.value.trim()==='':true;
+
+function formatDownloadTimer(ms){
+const totalSeconds=Math.max(0,Math.ceil(ms/1000));
+const minutes=Math.floor(totalSeconds/60);
+const seconds=totalSeconds%60;
+return `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
 }
 
 function updateDownloadTimerState(){
-const authRemaining=Math.max(0,getLockoutUntil()-Date.now());
-const cooldownRemaining=getDownloadCooldownRemaining();
-const remaining=Math.max(authRemaining,cooldownRemaining);
+const remaining=getDownloadCooldownRemaining();
 const active=remaining>0;
-const seconds=Math.ceil(remaining/1000);
+const timerText=formatDownloadTimer(remaining);
 document.querySelectorAll('.btn-download[data-download-button="true"]').forEach(button=>{
 const label=button.querySelector('.download-label');
-if(!label)return;
+const timer=button.querySelector('.download-timer');
+if(label)label.textContent='Download';
+if(timer)timer.textContent=active?timerText:'';
 button.classList.toggle('timer-active',active);
-label.textContent=active?`Download • ${seconds}s`:'Download';
 });
 }
 
-function updateLockoutTimer(){
-updateAuthButtonState();
+function updateDownloadTimer(){
 updateDownloadTimerState();
-const authRemaining=Math.max(0,getLockoutUntil()-Date.now());
-const cooldownRemaining=getDownloadCooldownRemaining();
-if(authRemaining<=0&&cooldownRemaining<=0&&lockoutTimerId){
+if(getDownloadCooldownRemaining()<=0&&lockoutTimerId){
 clearInterval(lockoutTimerId);
 lockoutTimerId=0;
 }
 }
 
-function startLockoutTimer(){
+function startDownloadTimer(){
 if(lockoutTimerId)return;
-lockoutTimerId=setInterval(updateLockoutTimer,500);
-updateLockoutTimer();
+lockoutTimerId=setInterval(updateDownloadTimer,500);
+updateDownloadTimer();
 }
 
 function handleDownload(url){
-pendingDownloadUrl=url;
-const msg=document.getElementById('authMessage');
-const now=Date.now();
-const authRemaining=Math.max(0,getLockoutUntil()-now);
-const cooldownRemaining=getDownloadCooldownRemaining();
-const remaining=Math.max(authRemaining,cooldownRemaining);
-if(remaining>0){
-if(msg){
-msg.style.color="var(--accent)";
-msg.textContent=`Timeout! Tunggu ${Math.ceil(remaining/1000)} detik.`;
-}
-startLockoutTimer();
+if(getDownloadCooldownRemaining()>0){
+startDownloadTimer();
 return;
 }
-document.getElementById('authKey').value="";
-document.getElementById('loginBtn').disabled=true;
-if(msg)msg.textContent="";
-updateAuthButtonState();
-openModal('passwordModal');
-}
-
-function submitAuth(){
-const msg=document.getElementById('authMessage');
-const now=Date.now();
-const authRemaining=Math.max(0,getLockoutUntil()-now);
-const cooldownRemaining=getDownloadCooldownRemaining();
-const remaining=Math.max(authRemaining,cooldownRemaining);
-if(remaining>0){
-msg.style.color="var(--accent)";
-msg.textContent=`Timeout! Tunggu ${Math.ceil(remaining/1000)} detik.`;
-startLockoutTimer();
-return;
-}
-const input=document.getElementById('authKey').value.trim().toUpperCase();
-if(btoa(input)===activeEncodedPassword){
-msg.style.color="#10b981";
-msg.textContent="Akses Succes!";
-localStorage.setItem('auth_fails',0);
-activeEncodedPassword=envxyyraa[Math.floor(Math.random()*envxyyraa.length)];
-setTimeout(()=>{
-incrementLocalDownloadCount(pendingDownloadUrl);
-window.open(pendingDownloadUrl,"_blank");
+incrementLocalDownloadCount(url);
+window.open(url,"_blank");
 startDownloadCooldown();
 closeAll();
-},400);
-}else{
-let fails=parseInt(localStorage.getItem('auth_fails'))||0;
-fails++;
-activeEncodedPassword=envxyyraa[Math.floor(Math.random()*envxyyraa.length)];
-if(fails>=2){
-localStorage.setItem('auth_lockout',now+60000);
-localStorage.setItem('auth_fails',0);
-msg.style.color="var(--accent)";
-msg.textContent="Timeout 1 menit! Terlalu banyak gagal.";
-startLockoutTimer();
-}else{
-localStorage.setItem('auth_fails',fails);
-msg.style.color="var(--accent)";
-msg.textContent="Password Salah! Sisa 1 kali coba.";
 }
-}
-}
+
 
 function showFileInfo(index){
 const b=currentPaginatedBuilds[index];
@@ -2883,27 +2832,26 @@ document.addEventListener("DOMContentLoaded",()=>{
 loadSavedTheme();
 startBrandTitleCycle();
 setupFilters();
-startLockoutTimer();
+startDownloadTimer();
 Promise.allSettled([getUserIP(),loadData()]);
-updateAuthButtonState();
 updateDownloadTimerState();
 window.addEventListener('storage',event=>{
-if(event.key==='download_cooldown_until'||event.key==='auth_lockout'){
-startLockoutTimer();
-updateLockoutTimer();
+if(event.key==='download_cooldown_until'){
+startDownloadTimer();
+updateDownloadTimer();
 }
 });
 window.addEventListener('pageshow',()=>{
-startLockoutTimer();
-updateLockoutTimer();
+startDownloadTimer();
+updateDownloadTimer();
 });
 window.addEventListener('focus',()=>{
-startLockoutTimer();
-updateLockoutTimer();
+startDownloadTimer();
+updateDownloadTimer();
 });
 document.addEventListener('visibilitychange',()=>{
-startLockoutTimer();
-updateLockoutTimer();
+startDownloadTimer();
+updateDownloadTimer();
 });
 });
 </script>
